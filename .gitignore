@@ -1,0 +1,7 @@
+## your temporary workspace
+tmp/
+!tmp/.gitkeep
+
+## pycharm
+.idea
+
