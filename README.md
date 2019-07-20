@@ -21,7 +21,21 @@ and documentation about
 ## Setup: Python
 
 
-## Setup: Jupyter
+## Setup: JupyterLab
+
+### Spell checker
+
+- https://github.com/ijmbarr/jupyterlab_spellchecker
+
+### JupyterLab Template
+
+- https://github.com/timkpaine/jupyterlab_templates
+
+### DrawIO
+
+This is not working on my PC. Try it if you are interested in it.
+
+- https://github.com/QuantStack/jupyterlab-drawio
 
 
 ## Install this library

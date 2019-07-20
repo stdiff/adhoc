@@ -1,7 +1,7 @@
 """
 This script is used to retrieve a data set for unit tests.
 """
-from unittest import TestCase
+from unittest import TestCase, main
 from pathlib import Path
 import hashlib
 
@@ -11,12 +11,13 @@ data_url = "http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult
 names = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status",
          "occupation", "relationship", "race", "sex", "capital-gain", "capital-loss",
          "hours-per-week", "native-country", "label"]
-data_path = Path("data/adult.csv")
+csv_path = "../data/adult.csv"
 checksum = "ee2d7503652f28a713aa6a054f5d9bb610a160afb8b817e6347d155c80af9795"
 
 
 class TestData(TestCase):
     def test_data(self):
+        data_path = Path(__file__).parent.joinpath(csv_path)
 
         if not data_path.exists():
             ## if there is no data file, then we have to download the data
@@ -27,3 +28,7 @@ class TestData(TestCase):
             checksum_calculated = hashlib.sha256(fo.read()).hexdigest()
 
         self.assertEqual(checksum_calculated, checksum)
+
+
+if __name__ == "__main__":
+    main()
