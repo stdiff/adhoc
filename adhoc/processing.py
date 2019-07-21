@@ -2,7 +2,7 @@
 Class for checking data quality
 """
 
-from typing import Any, List
+from typing import Any, List, Union, Dict
 from enum import Enum
 
 import numpy as np
@@ -10,6 +10,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
+
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelBinarizer
 
 from pylab import rcParams
 
@@ -410,4 +414,158 @@ class Inspector:
         plt.xticks(rotation=rotation)
         plt.title(title)
         plt.show()
+
+
+
+class MultiConverter(BaseEstimator, TransformerMixin):
+    def __init__(self, columns:list,
+                 strategy:Dict[str,str],
+                 cats=List[str],
+                 drop=Dict[str,str]):
+        """
+        This Transformer applies `sklearn.impute.SimpleImputer`
+        and `sklearn.preprocessing.LabelBinarizer`. Moreover
+        we may remove one dummy variable for each categorical
+        variables to avoid a collinear feature matrix.
+
+        By definition, the keys of strategy is a subset of columns
+        and the keys of drop must be a subset of cats.
+
+        For strategy and drop you do not need to give all columns.
+        Namely we apply the default behavior for not given columns.
+
+        strategy: mean
+        drop: most frequent values
+
+        If no dropping value is specified, we remove the most frequent
+        value in the variable. "dropping value" for binary variable will
+        be ignored because of the implementation of LabelEncoder.
+
+        :param columns: list of column names
+        :param strategy: column -> strategy for SimpleImputer
+        :param cats: columns which LabelBinarizer is applied for
+        :param drop: cat column -> value to drop
+        """
+
+        self.columns = columns
+        self.strategy = strategy
+        self.cats = cats
+        self.drop = drop
+
+        if not set(cats).issubset(columns):
+            raise ValueError("cats must be subset of columns.")
+
+        if not set(strategy.keys()).issubset(columns):
+            raise ValueError("The keys of strategy must be subset of columns.")
+
+        if not set(drop.keys()).issubset(cats):
+            raise ValueError("The keys of drop must be a subset of cats")
+
+        self.imputers = None
+        self.lb = None
+        self.classes_ = None
+
+    def fit(self, X:Union[np.ndarray,pd.DataFrame], y=None):
+        """
+        Fit Imputers and LabelEncoders by taking into account the given information
+
+        :param X: numpy array (2d) or pandas DataFrame
+        :param y: no need
+        :return: self
+        """
+
+        self.imputers = {} ## col -> SimpleImputer
+        self.lb = {} ## col -> LabelBinarizer
+        self.classes_ = []
+
+        for i in range(X.shape[1]):
+            ## fit SimpleImputer
+            col = self.columns[i]
+
+            if col in self.strategy.keys():
+                imputer = SimpleImputer(strategy=self.strategy[col])
+            else:
+                imputer = SimpleImputer(strategy="mean")
+
+            if isinstance(X,pd.DataFrame):
+                df_vals = X[[col]].copy()
+            else:
+                df_vals = pd.DataFrame({col:X[:,i]})
+
+            df_vals.dropna(how="any", inplace=True)
+            imputer.fit(df_vals)
+            self.imputers[col] = imputer
+
+            ## fit LabelEncoder
+            if col in self.cats:
+
+                values = list(df_vals[col].dropna().unique())
+                lb = LabelBinarizer()
+                lb.fit(values)
+                self.lb[col] = lb
+
+                ## dropping_value check
+                if lb.y_type_ == "binary":
+                    ## Because of the implementation of LabelEncoder we can not choose
+                    ## the positive class.
+                    dropping_value = lb.classes_[0]
+                    self.drop[col] = dropping_value
+
+                else:
+                    if col in self.drop.keys():
+                        dropping_value = self.drop[col]
+                        if dropping_value not in values:
+                            raise ValueError("%s is not found in the column %s" % (dropping_value,col))
+
+                    else:
+                        ## pick most frequent value
+                        dropping_value = df_vals[col].value_counts().sort_values(ascending=False).index[0]
+                        self.drop[col] = dropping_value
+
+                classes = ["%s_%s" % (col, val) for val in lb.classes_ if val != dropping_value]
+                self.classes_.extend(classes)
+
+            else:
+                self.classes_.append(col)
+
+        return self
+
+
+    def transform(self, X:Union[np.ndarray,pd.DataFrame]) -> np.ndarray:
+        """
+        Convert the given numpy array or pandas DataFrame by applying trained
+        imputers and encoders.
+
+        :param X: numpy array (2d) or pandas DataFrame
+        :return: numpy array
+        """
+
+        data = []
+        for i in range(X.shape[1]):
+            col = self.columns[i]
+
+            if isinstance(X, pd.DataFrame):
+                df_vals = X[[col]].copy()
+            else:
+                df_vals = pd.DataFrame({col:X[:,i]})
+
+            ## filling missing values
+            vals = self.imputers[col].transform(df_vals) # ndarray of shape (n,1)
+
+            ## one-hot encoding
+            if col in self.lb.keys():
+                vals = self.lb[col].transform(vals) ## ndarray
+
+                ## if the variable is not binary, then we drop the specified dummy variable
+                if self.lb[col].y_type_ != "binary":
+                    dropping_idx = list(self.lb[col].classes_).index(self.drop[col])
+                    vals = np.delete(vals, obj=dropping_idx, axis=1)
+
+            data.append(vals)
+
+        return np.concatenate(data,axis=1)
+
+    def inverse_transform(self,X):
+        ## TODO: implementation inverse_transform
+        raise NotImplemented("comming soon?")
 

@@ -1,9 +1,10 @@
 from unittest import TestCase
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-from adhoc.processing import Inspector, VariableType
+from adhoc.processing import Inspector, VariableType, MultiConverter
 
 test_data = Path("data/adult.csv")
 
@@ -146,3 +147,39 @@ class ProcessingTest(TestCase):
             "chi-square test"
         )
 
+class TestMultiConverter(TestCase):
+    def test_multi_converter(self):
+        """
+        test the methods of MultiConverter
+        """
+
+        df = pd.DataFrame({
+            "col1": ["a", "a", "b", "c", np.nan],  ## drop is given
+            "col2": [1, 2, np.nan, 2, 5],
+            "col3": ["x", np.nan, "y", np.nan, "x"], ## binary
+            "col4": ["s", "s", "s", "t", "u"]    ## drop is not given
+        }, columns=["col1","col2","col3","col4"])
+
+        cats = ["col1","col3","col4"]
+        converter = MultiConverter(
+            columns=df.columns,
+            strategy = {c:"most_frequent" for c in cats},
+            cats = cats,
+            drop = {"col1":"b"}
+        )
+
+        converter.fit(df.values)  ## fit by ndarray
+        converter.fit(df) ## fit by DataFrame
+
+        dg_columns = ["col1_a","col1_c","col2","col3_y","col4_t","col4_u"]
+        dg = pd.DataFrame({
+            "col1_a": [1,1,0,0,1],
+            "col1_c": [0,0,0,1,0],
+            "col2": [1,2,(1+2+2+5)/4,2,5],
+            "col3_y": [0,0,1,0,0],
+            "col4_t": [0,0,0,1,0],
+            "col4_u": [0,0,0,0,1]
+        }, columns=dg_columns)
+
+        self.assertEqual(converter.classes_, dg_columns)
+        self.assertTrue(np.array_equal(converter.transform(df),dg.values))
