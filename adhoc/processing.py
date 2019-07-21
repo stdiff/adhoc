@@ -418,10 +418,9 @@ class Inspector:
 
 
 class MultiConverter(BaseEstimator, TransformerMixin):
-    def __init__(self, columns:list,
-                 strategy:Dict[str,str],
-                 cats=List[str],
-                 drop=Dict[str,str]):
+    def __init__(self, columns:list, cats:List[str],
+                 strategy:Dict[str,str]=None,
+                 drop:Dict[str,str]=None):
         """
         This Transformer applies `sklearn.impute.SimpleImputer`
         and `sklearn.preprocessing.LabelBinarizer`. Moreover
@@ -446,23 +445,23 @@ class MultiConverter(BaseEstimator, TransformerMixin):
         be ignored because of the implementation of LabelEncoder.
 
         :param columns: list of column names
-        :param strategy: column -> strategy for SimpleImputer
         :param cats: columns which LabelBinarizer is applied for
+        :param strategy: column -> strategy for SimpleImputer
         :param drop: cat column -> value to drop
         """
 
         self.columns = columns
         self.strategy = strategy
         self.cats = cats
-        self.drop = drop
+        self.drop = {} if drop is None else drop
 
-        if not set(cats).issubset(columns):
+        if not set(self.cats).issubset(self.columns):
             raise ValueError("cats must be subset of columns.")
 
-        if not set(strategy.keys()).issubset(columns):
+        if not set(self.strategy.keys()).issubset(self.columns):
             raise ValueError("The keys of strategy must be subset of columns.")
 
-        if not set(drop.keys()).issubset(cats):
+        if not set(self.drop.keys()).issubset(self.cats):
             raise ValueError("The keys of drop must be a subset of cats")
 
         self.imputers = None
