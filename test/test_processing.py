@@ -161,9 +161,12 @@ class TestMultiConverter(TestCase):
         }, columns=["col1","col2","col3","col4"])
 
         cats = ["col1","col3","col4"]
+        strategies = {cat:"most_frequent" for cat in cats}
+        strategies["col1"] = "c"
+
         converter = MultiConverter(
             columns=df.columns,
-            strategy = {c:"most_frequent" for c in cats},
+            strategy = strategies,
             cats = cats,
             drop = {"col1":"b"}
         )
@@ -173,8 +176,8 @@ class TestMultiConverter(TestCase):
 
         dg_columns = ["col1_a","col1_c","col2","col3_y","col4_t","col4_u"]
         dg = pd.DataFrame({
-            "col1_a": [1,1,0,0,1],
-            "col1_c": [0,0,0,1,0],
+            "col1_a": [1,1,0,0,0],
+            "col1_c": [0,0,0,1,1],
             "col2": [1,2,(1+2+2+5)/4,2,5],
             "col3_y": [0,0,1,0,0],
             "col4_t": [0,0,0,1,0],

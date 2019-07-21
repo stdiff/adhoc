@@ -437,6 +437,10 @@ class MultiConverter(BaseEstimator, TransformerMixin):
         strategy: mean
         drop: most frequent values
 
+        If you want to fill missing values with a constant value,
+        then you can give it as "strategy". Then it will be considered
+        as fill_value in SimpleImputer.
+
         If no dropping value is specified, we remove the most frequent
         value in the variable. "dropping value" for binary variable will
         be ignored because of the implementation of LabelEncoder.
@@ -483,7 +487,14 @@ class MultiConverter(BaseEstimator, TransformerMixin):
             col = self.columns[i]
 
             if col in self.strategy.keys():
-                imputer = SimpleImputer(strategy=self.strategy[col])
+                strategy = self.strategy[col]
+                if strategy not in ["mean","median","most_frequent"]:
+                    fill_value = strategy
+                    strategy = "constant"
+                    imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
+                else:
+                    imputer = SimpleImputer(strategy=strategy)
+
             else:
                 imputer = SimpleImputer(strategy="mean")
 
