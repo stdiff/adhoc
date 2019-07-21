@@ -423,8 +423,6 @@ pd.DataFrame(converter.transform(df), columns=converter.classes_).head()
 # 5. `converter.classes_` gives you the original variable name and the corresponding class names.
 # 6. `fit_transform()` is available. But you should not include this instance in `sklearn.pipeline.Pipeline` unless you specifies dropping values for all categorical variable. This is because the dropping variable can change during cross-validation.
 
-pd.DataFrame.to_*?
-
 df_transformed = pd.DataFrame(converter.transform(df), columns=converter.classes_)
 df_transformed.to_pickle("../data/feature_matrix.pkl")
 
