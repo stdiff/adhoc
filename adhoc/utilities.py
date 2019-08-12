@@ -2,8 +2,13 @@
 Helper functions
 """
 
+from collections import OrderedDict
+from itertools import product
+
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn import datasets
 from sklearn.utils import Bunch
@@ -65,6 +70,64 @@ def load_diabetes(target:str="progression"):
     return bunch2dataframe(diabetes, target)
 
 
+def facet_grid_scatter_plot(data:pd.DataFrame, row:str, col:str,
+                            x:str, y:str, c:str=None, hue:str=None,
+                            cmap:str="bwr", alpha=0.5, aspect:float=2,
+                            margin_titles:bool=True, **kwargs):
+    """
+    create grid by using two categorical variables row and col and draw scatter plots by
+    using variables x and y with color c (continuous) or hue (categorical). In R this
+    function is something similar to
+
+        ggplot(data, aes(x,y,color=c)) + geom_point() + facet_grid(row~col)
+
+    :param data: pandas DataFrame
+    :param row: field of rows in a grid. The field must be categorical.
+    :param col: field of columns in a grid. The field must be categorical.
+    :param x: field of x-axis. This field must be continuous.
+    :param y: field of y-axis. This field must be continuous.
+    :param c: field of color. This field must be continuous. If hue is given, c must be None.
+    :param hue: field of color. This field must be categorical. If c is given, hue must be None.
+    :param cmap: parameter of matplotlib.pyplot.scatter
+    :param alpha: parameter of matplotlib.pyplot.scatter
+    :param aspect: parameter of seaborn.FacetGrid
+    :param margin_titles: parameter of seaborn.FacetGrid
+    :param kwargs: given to seaborn.FacetGrid
+    :return:
+    """
+
+    def plt_scatter(x, y, c, **kwargs):
+        """
+        Remove color option to avoid conflict which seaborn creates.
+        This idea is originated from
+        https://stackoverflow.com/questions/44641669/scatterplot-with-point-colors-representing-a-continuous-variable-in-seaborn-face
+        """
+        kwargs.pop("color")
+        plt.scatter(x, y, c=c, **kwargs)
+
+    if c:
+        ## c is given => continuous variable
+        fg = sns.FacetGrid(data=data, row=row, col=col,
+                           aspect=aspect, margin_titles=margin_titles, **kwargs)
+        fg = fg.map(plt_scatter, x, y, c, alpha=alpha, cmap=cmap)
+
+        ## put a common color bar on the right
+        vmin, vmax = data[c].min(), data[c].max()
+
+        fg.fig.subplots_adjust(right=0.9)
+        cax = fg.fig.add_axes([0.92, .25, .02, .6])
+        points = plt.scatter([], [], c=[], vmin=vmin, vmax=vmax, cmap=cmap)
+        fg.fig.colorbar(points, cax=cax)
+
+    else:
+        ## hue is given => discrete variable
+        fg = sns.FacetGrid(data=data, row=row, col=col, hue=hue,
+                           aspect=aspect, margin_titles=margin_titles, **kwargs)
+        fg.map(plt.scatter, x, y, alpha=alpha).add_legend()
+
+    #plt.show()
+
+
 def bins_by_tree(data:pd.DataFrame, field:str, target:str,
                  target_is_continuous:bool, n_bins:int=5,
                  n_points:int=200, precision:int=2, **kwargs) -> pd.Series:
@@ -73,11 +136,13 @@ def bins_by_tree(data:pd.DataFrame, field:str, target:str,
     we bin the field, so that the cost function (Gini index/RMSE) is optimized.
     For implementation we just train a decision tree model.
 
+    WARNING: the number of bins can be smaller than n_bins, because of the training result.
+
     :param data: DataFrame containing field and target
     :param field: column to bin. Must be continuous.
     :param target: column which is used to calculate cost function.
     :param target_is_continuous: True if target variable is continuous.
-    :param n_bins: number of bins
+    :param n_bins: number of bins.
     :param n_points: number of points of grid to check
     :param precision: parameter of pandas.cut
     :param kwargs: parameter for DecisionTreeRegressor/Classifier
@@ -115,74 +180,83 @@ def bins_by_tree(data:pd.DataFrame, field:str, target:str,
     return pd.cut(data[field], bins, precision=precision)
 
 
-from itertools import product
-import seaborn as sns
-import matplotlib.pyplot as plt
+def bins_heatmap(data:pd.DataFrame, cat1:str, cat2:str, x:str, y:str, target:str,
+                 n_bins:int=5, cmap:str="YlGnBu", center:float=None,
+                 magnification:float=None, fontsize:int=14):
+    """
+    create a grid with cat1 (and cat2) and draw heat maps (x,y,AVG(target)). For heat maps
+    we bin the variables x and y by applying bins_by_tree.
 
-def bins_heatmap(data:pd.DataFrame, row:str, col:str, x:str, y:str, target:str,
-                 n_bins:int=5):
-    ## we assume that the target variable is continuous
-    rows = data[row].unique()
-    cols = data[col].unique()
+    - cat1 and cat2 must be categorical
+    - x and y must be continuous and they are binned.
+    - target variable must be numerical, so that the average has meaning.
+
+    :param data: DataFrame
+    :param cat1: categorical variable for a grid.
+    :param cat2: Another categorical variable. You can put None, if you do not need it.
+    :param x: continuous variable
+    :param y: continuous variable
+    :param target: numerical variable.
+    :param n_bins: *maximum* number of bins. The actual number can be smaller than it.
+    :param cmap: Parameter of seaborn.heatmap.
+    :param center: center of the color gauge.
+    :param magnification: magnification of the height.
+    :param fontsize: font size of title, xlabel and ylabel
+    """
+
+    cats1 = data[cat1].unique()
+
+    if cat2 is None:
+        cats2 = [None]
+    else:
+        cats2 = data[cat2].unique()
+
+    vals2loc = OrderedDict()
+    for val1, val2 in product(cats1,cats2):
+        if val2 is None:
+            loc = data[cat1] == val1
+        else:
+            loc = np.logical_and(data[cat1] == val1, data[cat2] == val2)
+
+        if loc.any():
+            vals2loc[(val1,val2)] = loc
+
+    fig, axes = plt.subplots(nrows=len(vals2loc.keys()), ncols=1)
+
+    ## change the height of the plot
+    h = fig.get_figheight()
+    if magnification is None:
+        magnification = max(len(cats1), len(cats2))
+    fig.set_figheight(magnification*h)
+
+    ## boundary of the color gauge
     vmin, vmax = data[target].min(), data[target].max()
 
-    fig, axes = plt.subplots(nrows=len(rows), ncols=len(cols))
-    ax = list(axes.flat)
-
-    for pair, subax in zip(product(rows, cols), ax):
-        i,j = pair
-        loc = np.logical_and(data[row] == i, data[col] == j)
-        if not loc.any():
-            continue
-
-        subset = data.loc[loc,:].copy()
+    for pair, subax in zip(vals2loc.keys(), axes.flat):
+        val1, val2 = pair
+        subset = data.loc[vals2loc[(val1,val2)],:].copy()
 
         for field in [x,y]:
             subset[field] = bins_by_tree(subset, field=field, target=target,
                                          target_is_continuous=True, n_bins=n_bins)
 
         df_heatmap = subset.groupby([x,y])[target].mean().reset_index()
-        df_heatmap = df_heatmap.pivot(index=x, columns=y, values=target)
-        sns.heatmap(df_heatmap, vmin=vmin, vmax=vmax, center=0.5, annot=True, ax=subax)
+        df_heatmap = df_heatmap.pivot(index=y, columns=x, values=target)
+        df_heatmap.sort_index(ascending=False, inplace=True)
+        sns.heatmap(df_heatmap, vmin=vmin, vmax=vmax, cmap=cmap,
+                    center=center, annot=True, cbar=False, ax=subax)
 
-    plt.show()
+        if val2 is None:
+            subax.set_title("%s = %s" % (cat1, val1))
+        else:
+            subax.set_title("%s = %s | %s = %s" % (cat1, val1, cat2, val2))
+
+        subax.title.set_fontsize(fontsize)
+        subax.set_xlabel(x, fontsize=fontsize)
+        subax.set_ylabel(y, fontsize=fontsize)
+
+    plt.tight_layout()
 
 
 if __name__ == "__main__":
-    # df = load_iris()
-    # species = df["species"].unique()
-    # df["petal_length_bin"] = bins_by_tree(data=df, field="petal_length",
-    #                                       target="species",
-    #                                       target_is_continuous=False, n_bins=5)
-    # df["petal_width_bin"] = bins_by_tree(data=df, field="petal_width",
-    #                                      target="species",
-    #                                      target_is_continuous=False, n_bins=5)
-    # df = pd.concat([df, pd.get_dummies(df["species"])], axis=1)
-    #
-    # dg = df.groupby(["petal_length_bin","petal_width_bin"])[species].mean()
-    # dg["majority"] = dg.apply(lambda r: r.idxmax(), axis=1)
-
-    df = load_iris()
-    df["cat"] = pd.qcut(df["sepal_length"], q=3)
-    bins_heatmap(df, row="cat", col="species", x="petal_width", y="petal_length", target="sepal_width")
-
-
-    # import seaborn as sns
-    # import matplotlib.pyplot as plt
-    # df_bin = load_iris()
-    # fields = ["petal_length", "petal_width"]
-    # for field in fields:
-    #     df_bin[field] = bins_by_tree(df_bin, field=field, target="sepal_width",
-    #                                  target_is_continuous=True, n_bins=5)
-    # df_bin = df_bin.groupby(fields)["sepal_width"].mean().reset_index()
-    # df_bin = df_bin.pivot(index=fields[0], columns=fields[1], values="sepal_width")
-    # sns.heatmap(df_bin, center=0.5, annot=True)
-    # plt.show()
-
-    #print(dg)
-    #dg.reset_index(inplace=True)
-    #dh = dg.pivot(index="petal_length_bin", columns="petal_width_bin", values="majority")
-    #print(dh)
-
-    #row = dg.iloc[0,:]
-    #print(row)
+    pass
