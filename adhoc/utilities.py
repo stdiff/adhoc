@@ -37,13 +37,27 @@ def load_iris(target:str="species") -> pd.DataFrame:
     Construct a DataFrame from sklearn.datasets.load_iris
 
     :param target: name of the target variable
-    :return: DataFrame
+    :return: DataFrame of data set
     """
 
     iris = datasets.load_iris()
     df = bunch2dataframe(iris, target)
     df.columns = [c[:-5].replace(" ","_") for c in iris.feature_names] + [target]
     df["species"] = df["species"].apply(lambda i: iris.target_names[i])
+    return df
+
+
+def load_breast_cancer(target:str="label") -> pd.DataFrame:
+    """
+    Construct a Dataframe from sklearn.datasets.load_breas_cancer
+
+    :param target: name of the target variable
+    :return: DataFrame of data set
+    """
+
+    breast_cancer = datasets.load_breast_cancer()
+    df = bunch2dataframe(breast_cancer, target=target)
+    df[target] = [breast_cancer.target_names[y].replace(" ","_") for y in df[target]]
     return df
 
 
@@ -258,5 +272,34 @@ def bins_heatmap(data:pd.DataFrame, cat1:str, cat2:str, x:str, y:str, target:str
     plt.tight_layout()
 
 
+from adhoc.modeling import simple_pipeline_cv, grid_params, ROCCurve
+from sklearn.linear_model import LogisticRegression
+
+
+import warnings
+warnings.filterwarnings("ignore")
+
 if __name__ == "__main__":
-    pass
+
+
+    df = load_boston()
+    target = "expensive"
+    border = 35
+    df[target] = (df["PRICE"] >= border).astype(np.int)
+    df.drop("PRICE", axis=1, inplace=True)
+
+    from sklearn.model_selection import train_test_split
+    X_train, X_test, y_train, y_test = train_test_split(df.drop(target,axis=1), df[target],
+                                                        test_size=0.4, random_state=4)
+
+
+    plr = simple_pipeline_cv("plr", LogisticRegression(random_state=3),
+                             param_grid=grid_params["LogisticRegression"])
+    plr.fit(X_train,y_train)
+
+    y_score = plr.predict_proba(X_train)[:,1]
+
+    roc = ROCCurve(y_train, y_score)
+
+
+
