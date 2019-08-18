@@ -7,3 +7,5 @@ install:
 script:
   - python -m unittest test/test_data.py
   - python -m unittest test/test_processing.py
+  - python -m unittest test/test_utilities.py
+  - python -m unittest test/test_modeling.py
