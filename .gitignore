@@ -1,0 +1,9 @@
+## your temporary workspace
+tmp/
+!tmp/.gitkeep
+
+## pycharm
+.idea
+
+## exported notebook
+notebooks/*.html
