@@ -74,7 +74,7 @@ def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
     :param scoring: See https://scikit-learn.org/stable/modules/model_evaluation.html
     :param scaler: Transfoer instance. The default value is MinMaxScaler()
     :param kwarg: arguments for GridSearchCV
-    :return: fitted GridSearchCV instance
+    :return: GridSearchCV instance
     """
     if scaler is None:
         scaler = MinMaxScaler()
@@ -149,6 +149,7 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
     :param columns: list of columns
     :return: DataFrame of coefficients
     """
+    ## TODO: change the name of the method, because show_* must return a figure
     model = pick_the_last_estimator(grid)
 
     if not hasattr(model, "coef_") or not hasattr(model, "intercept_"):
@@ -166,7 +167,7 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
     return df_coef
 
 
-def show_tree(grid:GridSearchCV, columns:List[str]):
+def show_tree(grid:GridSearchCV, columns:List[str]) -> Image:
     """
     Visualize the given trained DecisionTree model on Jupyter.
     This function requires also pydot.
@@ -194,6 +195,7 @@ def show_feature_importance(grid:GridSearchCV, columns:List[str]) -> pd.Series:
     :param columns: list of column names
     :return: Series of feature importance
     """
+    ## TODO: change the name of the method. (Do not use show_)
     model = pick_the_last_estimator(grid)
 
     if hasattr(model,"feature_importances_"):
@@ -239,7 +241,7 @@ def recover_label(data:pd.DataFrame, field2columns:Dict[str,List[str]],
         for field, columns in field2columns.items():
             for column in columns:
                 if not column.startswith(field+sep):
-                    raise ValueError("Column %s does not have %s_%s as prefix" % (column,field,sep))
+                    raise ValueError("Column %s does not have %s%s as prefix" % (column,field,sep))
                 if not column in data.columns:
                     raise ValueError("Column %s can not be found in the given data." % column)
 
@@ -251,7 +253,7 @@ def recover_label(data:pd.DataFrame, field2columns:Dict[str,List[str]],
 
         data[field] = data[columns[0]].map({0: other, 1: values[0]})
         for column, value in zip(columns[1:], values[1:]):
-            data[field][data[column] == 1] = value
+            data.loc[data[column] == 1,field] = value
 
     if not inplace:
         return data
@@ -393,15 +395,16 @@ class ROCCurve:
         """
         Compute a table for lead prioritization. That is,
         - sort the instances in the ascending order of scores (probabilities)
-        -
+        - scaling the scores so that the expected value agrees with the given proportion
 
-        :param proportion_positive:
+        :param proportion_positive: (estimated) proportion of the positive instances
+                                    in the data set.
         :param scaling: if we do scaling the probabilities
-        :return:
+        :return: DataFrame of sorted scores and expected values.
         """
 
         if scaling and proportion_positive is None:
-            raise ValueError("")
+            raise ValueError("proportion_positive is needed for scaling")
 
         df = pd.DataFrame(index=self.y_index)
         df["y_true"] = self.y_true
@@ -450,35 +453,4 @@ class ROCCurve:
 
 
 if __name__ == "__main__":
-    from adhoc.utilities import load_boston
-    from sklearn.linear_model import LogisticRegression
-
-    df = load_boston()
-    target = "expensive"
-    border = 35
-    df[target] = (df["PRICE"] >= border).astype(np.int)
-    df.drop("PRICE", axis=1, inplace=True)
-
-    from sklearn.model_selection import train_test_split
-
-    X_train, X_test, y_train, y_test = train_test_split(df.drop(target, axis=1), df[target],
-                                                        test_size=0.4, random_state=4)
-
-    plr = simple_pipeline_cv("plr", LogisticRegression(random_state=3),
-                             param_grid=grid_params["LogisticRegression"])
-    plr.fit(X_train, y_train)
-
-    y_score = plr.predict_proba(X_train)[:, 1]
-
-    roc = ROCCurve(y_train, y_score)
-    df_score = roc.optimize_expected_value(proportion_positive=y_train.mean(), scaling=True)
-
-    with pd.option_context("display.max_columns",100):
-        print(df_score.head())
-
-
-    #plt.show()
-    roc.show_expected_value(proportion_positive=y_train.mean(), scaling=True)
-    plt.show()
-
-
+    pass
