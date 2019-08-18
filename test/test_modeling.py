@@ -157,13 +157,6 @@ class ModelingTest(TestCase):
             show_coefficients(self.boston_tree, self.boston_X.columns)
 
 
-    def test_show_tree(self):
-        """unittest for show_tree"""
-        image = show_tree(grid=self.boston_tree,
-                          columns=self.boston_X.columns)
-        self.assertTrue(isinstance(image,Image))
-
-
     def test_show_feature_importance(self):
         """unittest for show_feature_importance"""
         importance = show_feature_importance(
