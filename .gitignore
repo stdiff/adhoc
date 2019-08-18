@@ -5,3 +5,5 @@ tmp/
 ## pycharm
 .idea
 
+## exported notebook
+notebooks/*.html
