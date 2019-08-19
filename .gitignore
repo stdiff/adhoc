@@ -5,5 +5,16 @@ tmp/
 ## pycharm
 .idea
 
+## directory for packaging, etc
+build/
+dist/
+adhoc.egg-info/
+adhoc/__pycache__/
+test/__pycache__/
+
+## jupyter checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
 ## exported notebook
 notebooks/*.html
