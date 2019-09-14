@@ -2,8 +2,10 @@
 Helper functions
 """
 
+from typing import Union
 from collections import OrderedDict
 from itertools import product
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -13,6 +15,10 @@ import seaborn as sns
 from sklearn import datasets
 from sklearn.utils import Bunch
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, colors
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
 def bunch2dataframe(bunch:Bunch, target:str=None) -> pd.DataFrame:
@@ -270,6 +276,75 @@ def bins_heatmap(data:pd.DataFrame, cat1:str, cat2:str, x:str, y:str, target:str
         subax.set_ylabel(y, fontsize=fontsize)
 
     plt.tight_layout()
+
+
+def to_excel(df:pd.DataFrame, file:Union[str,Path], sheet:str="Sheet",
+             libreoffice:bool=True, style:str="TableStyleMedium9"):
+    """
+    Save the given DataFrame into an Excel file.
+
+    The reason why we do not use pd.DataFrame.to_excel is the style.
+    Basically we give a style to the table through openpyxl, but
+    The given style can be ignored on LibreOffice. Therefore we set
+    the standard colors to the cells if libreoffice option is True.
+    But in this case, we ignore the option style.
+
+    :param df: DataFrame
+    :param file: path to the excel file (xlsx)
+    :param sheet: name of the sheet for the table
+    :param libreoffice: arrange style for libreOffice
+    :param style: name of the style. If libreoffice is True, this is ignored.
+    """
+
+    wb = Workbook()
+
+    if not Path(file).exists():
+        ## if the file hat not been created we choose the default sheet
+        ws = wb.active
+        ws.title = sheet
+    elif sheet in wb.sheetnames:
+        ## if the specified sheet exits, then we use it.
+        ws = wb[sheet]
+    else:
+        ## otherwise we create a new sheet.
+        ws = wb.create_sheet(title=sheet)
+
+    ## header
+    ws.append(df.columns.tolist())
+
+    ## values
+    for i,row in enumerate(df.iterrows()):
+        ws.append(row[1].tolist())
+
+    ## Direct settings for LibreOffice
+    ## We can choose a style of a table through TableStyleInfo,
+    ## but it is not applied in LibreOffice.
+    if libreoffice:
+        style = "TableStyleMedium9"
+
+        color_header = colors.Color(rgb='4f81bd')
+        colors_row = ['b8cce4', 'dce6f1']
+        for i in range(1,df.shape[0]+2):
+            color = color_header if i == 1 else colors_row[i % 2]
+
+            for j in range(1,df.shape[1]+1):
+                if i == 1:
+                    ## header (bold, white)
+                    ws.cell(column=j, row=i).font = Font(bold=True, color="FFFFFF")
+
+                ws.cell(column=j, row=i).fill = PatternFill(fgColor=color, fill_type="solid")
+
+    ## table
+    ## https://openpyxl.readthedocs.io/en/stable/worksheet_tables.html
+    last_cell = "%s%s" % (ws.cell(row=df.shape[0]+1, column=df.shape[1]).column_letter,
+                          df.shape[0]+1)
+    tab = Table(displayName="Table1", ref="A1:%s" % last_cell)
+    style = TableStyleInfo(name=style, showFirstColumn=False, showLastColumn=False,
+                           showRowStripes=True, showColumnStripes=False)
+    tab.tableStyleInfo = style
+    ws.add_table(tab)
+
+    wb.save(filename=str(file))
 
     
 if __name__ == "__main__":
