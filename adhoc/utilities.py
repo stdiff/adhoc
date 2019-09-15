@@ -18,7 +18,7 @@ from sklearn import datasets
 from sklearn.utils import Bunch
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, colors
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
@@ -325,6 +325,9 @@ def to_excel(df:pd.DataFrame, file:Union[str,Path], sheet:str="Sheet",
     the standard colors to the cells if libreoffice option is True.
     But in this case, we ignore the option style.
 
+    The index will be ignored.
+    TODO: option whether the index should also be written
+
     :param df: DataFrame
     :param file: path to the excel file (xlsx)
     :param sheet: name of the sheet for the table
@@ -332,18 +335,23 @@ def to_excel(df:pd.DataFrame, file:Union[str,Path], sheet:str="Sheet",
     :param style: name of the style. If libreoffice is True, this is ignored.
     """
 
-    wb = Workbook()
-
     if not Path(file).exists():
         ## if the file hat not been created we choose the default sheet
+        wb = Workbook()
         ws = wb.active
         ws.title = sheet
-    elif sheet in wb.sheetnames:
-        ## if the specified sheet exits, then we use it.
-        ws = wb[sheet]
+
     else:
-        ## otherwise we create a new sheet.
-        ws = wb.create_sheet(title=sheet)
+        wb = load_workbook(str(file))
+        if sheet in wb.sheetnames:
+            ## if the specified sheet exits, then we overwrite it.
+            ws_index = wb.sheetnames.index(sheet)
+            wb.remove(wb[sheet])
+            ws = wb.create_sheet(title=sheet, index=ws_index)
+
+        else:
+            ## otherwise we create a new sheet.
+            ws = wb.create_sheet(title=sheet)
 
     ## header
     ws.append(df.columns.tolist())

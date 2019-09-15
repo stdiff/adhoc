@@ -17,7 +17,8 @@ setup(
                         "seaborn>=0.9.0",
                         "scikit-learn>=0.21.3",
                         "pydot>=1.4.1",
-                        "jupyter>=1.0.0"
+                        "jupyter>=1.0.0",
+                        "openpyxl>=2.6.3"
                         ],
     zip_safe=False
 )

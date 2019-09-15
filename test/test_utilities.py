@@ -8,9 +8,10 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets
 
+from adhoc.utilities import TempDir
 from adhoc.utilities import bunch2dataframe
 from adhoc.utilities import load_iris, load_boston, load_breast_cancer, load_diabetes
-from adhoc.utilities import bins_by_tree
+from adhoc.utilities import bins_by_tree, to_excel
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -93,3 +94,46 @@ class TestUtilities(TestCase):
 
         self.assertEqual(cats[0].left, -np.inf)
         self.assertEqual(cats[-1].right, np.inf)
+
+
+    def test_to_excel(self):
+        df_iris = load_iris()
+        df_boston = load_boston()
+        df_cancer = load_breast_cancer().loc[:10,:]
+
+        from openpyxl import load_workbook
+        sheets = ["iris","boston"]
+
+        with TempDir() as temp_dir:
+            excel_file = temp_dir.joinpath("new_file.xlsx")
+
+            ## Case 1) Create a new file
+            to_excel(df=df_iris, file=excel_file, sheet=sheets[0], libreoffice=True)
+
+            wb1 = load_workbook(str(excel_file))
+            self.assertEqual([sheets[0]], wb1.sheetnames)
+
+            ## whether we can read the excel through pandas.read_excel
+            dg1 = pd.read_excel(excel_file, sheet_name=sheets[0])
+            self.assertEqual(df_iris.columns.tolist(),dg1.columns.tolist())
+            self.assertEqual(df_iris.shape, dg1.shape)
+
+            ## Case 2) Add a sheet to an existing excel file
+            to_excel(df=df_boston, file=excel_file, sheet=sheets[1], libreoffice=True)
+
+            wb2 = load_workbook(str(excel_file))
+            self.assertEqual(sheets, wb2.sheetnames)
+
+            dg2 = pd.read_excel(excel_file, sheet_name=sheets[1])
+            self.assertEqual(df_boston.columns.tolist(),dg2.columns.tolist())
+            self.assertEqual(df_boston.shape, dg2.shape)
+
+            ## Case 3) Overwrite an existing sheet with a new table
+            to_excel(df=df_cancer, file=excel_file, sheet=sheets[0], libreoffice=False)
+
+            wb3 = load_workbook(str(excel_file))
+            self.assertEqual(sheets, wb3.sheetnames)
+
+            dg3 = pd.read_excel(excel_file, sheet_name=sheets[0])
+            self.assertEqual(df_cancer.columns.tolist(), dg3.columns.tolist())
+            self.assertEqual(df_cancer.shape, dg3.shape)
