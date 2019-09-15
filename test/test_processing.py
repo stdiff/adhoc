@@ -4,17 +4,37 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from adhoc.processing import file_info
 from adhoc.processing import Inspector, VariableType, MultiConverter
 
-test_data = Path("data/adult.csv")
+#test_data = Path("data/adult.csv")
 
 class ProcessingTest(TestCase):
+    test_data = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.test_data = Path("data/adult.csv")
+
+
+    def test_file_info(self):
+        data = file_info(self.test_data)
+
+        self.assertIsInstance(data,pd.DataFrame)
+
+        s = data["value"]
+        s.index = data["key"]
+
+        self.assertEqual("adult.csv", s["name"])
+        self.assertAlmostEqual(3514343/(1024*1024), float(s["size_in_MB"]))
+        self.assertEqual("3780e2797d26de93f5633d9bfed79da7", s["md5sum"])
+
 
     def test_an_inspection(self):
         """
         check the inspection
         """
-        df = pd.read_csv(test_data)
+        df = pd.read_csv(self.test_data)
 
         inspector = Inspector(df, m_cats=20)
 
@@ -68,7 +88,7 @@ class ProcessingTest(TestCase):
         conversion of variable type
         """
 
-        df = pd.read_csv(test_data)
+        df = pd.read_csv(self.test_data)
         inspector = Inspector(df, m_cats=20)
 
         self.assertEqual(inspector.result.loc["age", "variable"],
@@ -90,7 +110,7 @@ class ProcessingTest(TestCase):
         check DataFrames for distributions
         """
 
-        df = pd.read_csv(test_data)
+        df = pd.read_csv(self.test_data)
         nrow = df.shape[0]
         inspector = Inspector(df, m_cats=20)
 
@@ -116,14 +136,12 @@ class ProcessingTest(TestCase):
         Check significance tests
         """
 
-        df = pd.read_csv(test_data)
+        df = pd.read_csv(self.test_data)
         df_inspection = Inspector(df, m_cats=20)
 
         s = df_inspection.significance_test("fnlwgt","age")
 
-        self.assertTrue(
-            isinstance(s, pd.Series)
-        )
+        self.assertIsInstance(s,pd.Series)
 
         ## field1, field2, test, statistic, p-value
         self.assertEqual(len(s), 5)

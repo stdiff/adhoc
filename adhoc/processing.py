@@ -4,6 +4,8 @@ Class for checking data quality
 
 from typing import Any, List, Union, Dict
 from enum import Enum
+from pathlib import Path
+import hashlib
 
 import numpy as np
 import pandas as pd
@@ -31,8 +33,27 @@ class VariableType(Enum):
     continuous = "continuous"
 
 
-class Inspector:
+def file_info(file:Union[str,Path]) -> pd.DataFrame:
+    """
+    Check the basic information about the file
 
+    :param file: path to the file
+    :return: DataFrame in a long format
+    """
+    file = Path(file)
+
+    data = []
+    data.append(("name", file.name))
+    data.append(("size_in_MB", file.stat().st_size/(1024*1024)))
+
+    with file.open("rb") as fo:
+        md5sum = hashlib.md5(fo.read()).hexdigest()
+        data.append(("md5sum",md5sum))
+
+    return pd.DataFrame(data, columns=["key","value"])
+
+
+class Inspector:
     def __init__(self, df:pd.DataFrame, m_cats:int=20):
         """
         Construct an inspection DataFrame of the given one
