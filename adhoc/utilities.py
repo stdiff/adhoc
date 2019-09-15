@@ -6,6 +6,8 @@ from typing import Union
 from collections import OrderedDict
 from itertools import product
 from pathlib import Path
+import tempfile
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -19,6 +21,40 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, colors
 from openpyxl.worksheet.table import Table, TableStyleInfo
+
+
+class TempDir:
+    """
+    Helper class to work under a temporary directory.
+
+    When an instance of this class is created, a temporary directory is
+    also automatically created and you can find the path as an attribute
+    temp_dir.
+
+    Because of the implementation of tempfile.mkdtemp we have always to
+    remove the temporary directory manually. You can do this by executing
+    the method close().
+
+    This class can be used as a context manager. At the end of the context
+    the temporary directory is deleted.
+    """
+
+    def __init__(self):
+        self._temp_dir = tempfile.mkdtemp() # type: str
+
+    @property
+    def temp_dir(self) -> Path:
+        return Path(self._temp_dir)
+
+    def __enter__(self) -> Path:
+        return self.temp_dir
+
+    def close(self):
+        shutil.rmtree(self._temp_dir)
+        self._temp_dir = None
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
 
 def bunch2dataframe(bunch:Bunch, target:str=None) -> pd.DataFrame:
