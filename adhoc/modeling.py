@@ -81,7 +81,8 @@ def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
 
     pipeline = Pipeline([("scaler", scaler),  (name, model)])
     param_grid = add_prefix_to_param(name, param_grid)
-    model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True, **kwarg)
+    model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
+                         return_train_score=True, **kwarg)
     return model
 
 
@@ -110,7 +111,12 @@ def cv_results_summary(grid:GridSearchCV, alpha:float=0.05) -> pd.DataFrame:
     param_list = [k for k in grid.cv_results_.keys() if k.startswith("param_")]
 
     cols = ["rank_test_score", "mean_test_score", "std_test_score",
-            "test_CI_low", "test_CI_high"] + param_list
+        "test_CI_low", "test_CI_high"]
+
+    if grid.return_train_score:
+        cols.append("mean_train_score")
+
+    cols.extend(param_list)
 
     df = df[cols].copy()
     df.set_index(cols[0], inplace=True)

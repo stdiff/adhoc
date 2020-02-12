@@ -41,7 +41,7 @@ class ModelingTest(TestCase):
             LogisticRegression(solver="liblinear",
                                multi_class="auto"),
             param_grid={"C":[0.1,1]},
-            cv=3)
+            cv=3, iid=False, return_train_score=True)
         cls.iris_plr.fit(cls.iris_X,cls.iris_y)
 
         ## boston dataset
@@ -54,7 +54,8 @@ class ModelingTest(TestCase):
         cls.boston_tree = GridSearchCV(
             DecisionTreeRegressor(),
             param_grid={"max_depth":[3,5,7]},
-            cv=5, scoring="neg_mean_squared_error")
+            cv=5, scoring="neg_mean_squared_error",
+            iid=False, return_train_score=False)
         cls.boston_tree.fit(cls.boston_X, cls.boston_y)
 
 
@@ -86,8 +87,8 @@ class ModelingTest(TestCase):
                                    model=plr,
                                    param_grid=param_grid,
                                    scaler=MinMaxScaler(),
-                                   cv=cv
-                                   )
+                                   cv=cv,
+                                   iid=False)
         pipeline = model.estimator
 
         self.assertTrue(isinstance(model,GridSearchCV))
@@ -124,6 +125,11 @@ class ModelingTest(TestCase):
         self.assertAlmostEqual(0, (delta_left - delta_right).mean())
 
 
+    def test_cv_results_summary2(self):
+        results = cv_results_summary(self.iris_plr, alpha=0.05)
+        self.assertTrue("mean_train_score" in results.columns)
+
+
     def test_pick_the_last_estimator(self):
         """unittest for pick_the_last_estimator"""
         ## Case 1) Pipeline
@@ -131,7 +137,7 @@ class ModelingTest(TestCase):
             name="plr",
             model=LogisticRegression(solver="liblinear",
                                      multi_class="auto"),
-            param_grid={"C":[0.1,1]}, cv=3)
+            param_grid={"C":[0.1,1]}, cv=3, iid=False)
         model1.fit(self.iris_X,self.iris_y)
         estimator1 = pick_the_last_estimator(model1)
 
@@ -230,7 +236,6 @@ class TestROCCurve(TestCase):
 
     def test_ROCCurve(self):
         """unittest for ROCCurve"""
-
         ## auc attribute
         self.assertTrue(isinstance(self.roc.auc,float))
         self.assertTrue(self.roc.auc >= 0.5)
@@ -274,7 +279,6 @@ class TestROCCurve(TestCase):
             proportion_positive=self.roc.y_true.mean(),
             scaling=True)
 
-        print(df_scoring.tail())
         ## The original index must lie in the DataFrame
         self.assertTrue("index", df_scoring.columns)
 
