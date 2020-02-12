@@ -102,7 +102,7 @@ def cv_results_summary(grid:GridSearchCV, alpha:float=0.05) -> pd.DataFrame:
     df = pd.DataFrame(grid.cv_results_)
 
     n_fold = grid.cv ## number of folds in CV
-    delta =  df["std_test_score"]*stats.t.ppf(1-alpha/2, n_fold-1)
+    delta =  df["std_test_score"]*stats.t.ppf(1-alpha/2, n_fold-1)/np.sqrt(n_fold)
     df["test_CI_low"] = df["mean_test_score"] - delta
     df["test_CI_high"] = df["mean_test_score"] + delta
 
