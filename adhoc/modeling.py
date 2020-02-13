@@ -162,10 +162,14 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
     if not hasattr(model, "coef_") or not hasattr(model, "intercept_"):
         raise Exception("You probably have no linear model")
 
-    ## If we have a binary classifier, model.coef_ is an array of shape (1,p),
-    ## but model.class_ contains two classes. Thus we need to pick the positive class
-    ## TODO: Adjustment for a regressor
-    labels = model.classes_ if len(model.classes_) > 2 else [model.classes_[1]]
+    if hasattr(model,"classes_"):
+        ## classification
+        ## If we have a binary classifier, model.coef_ is an array of shape (1,p),
+        ## but model.class_ contains two classes. Thus we need to pick the positive class
+        labels = model.classes_ if len(model.classes_) > 2 else [model.classes_[1]]
+    else:
+        ## regression
+        labels = ["coefficient"]
 
     df_coef = pd.DataFrame(model.coef_.T, index=columns, columns=labels)
     df_intercept = pd.DataFrame([model.intercept_], index=["intercept"], columns=labels)
