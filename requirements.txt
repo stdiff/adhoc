@@ -13,3 +13,4 @@ jupytext==0.8.6
 graphviz==0.10.1
 openpyxl==2.6.3
 xlrd==1.2.0
+xgboost==0.81
