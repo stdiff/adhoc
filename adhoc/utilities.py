@@ -126,6 +126,42 @@ def load_diabetes(target:str="progression"):
     return bunch2dataframe(diabetes, target)
 
 
+def fetch_adult_dataset(csv_path:Path):
+    """
+    fetch the famous adult data set from UCI Machine Learning Repository
+    and store it to the given path. If the data set file already exists,
+    then the checksum is checked.
+
+    If this function ends with no error, you have the file in the given path.
+
+    :param csv_path: Path instance of the csv file
+    """
+
+    import hashlib
+    data_url = "http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
+    names = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status",
+             "occupation", "relationship", "race", "sex", "capital-gain", "capital-loss",
+             "hours-per-week", "native-country", "label"]
+    checksum = "ee2d7503652f28a713aa6a054f5d9bb610a160afb8b817e6347d155c80af9795"
+
+    if not csv_path.exists():
+        ## if there is no data file, then we have to download the data
+        df = pd.read_csv(data_url, na_values="?", names=names, skipinitialspace=True)
+        df.to_csv(csv_path, index=False)
+
+    with csv_path.open("rb") as fo:
+        checksum_calculated = hashlib.sha256(fo.read()).hexdigest()
+
+    if checksum_calculated != checksum:
+        raise Exception("You seem to have downloaded a wrong file")
+
+
+
+
+
+    pass
+
+
 def facet_grid_scatter_plot(data:pd.DataFrame, row:str, col:str,
                             x:str, y:str, c:str=None, hue:str=None,
                             cmap:str="bwr", alpha=0.5, aspect:float=2,
