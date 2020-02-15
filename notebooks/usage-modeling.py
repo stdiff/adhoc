@@ -84,22 +84,24 @@ y_train.value_counts()
 #
 # If you specify all dropping values manually, then you can integrate your `MultiConverter` instance in `Pipeline` without any problem.
 
-# +
-import sys
-sys.path.append("..")
-
-from adhoc.modeling import grid_params, simple_pipeline_cv
-# -
+try:
+    from adhoc.modeling import grid_params, simple_pipeline_cv
+except ImportError:
+    import sys
+    sys.path.append("..")
+    from adhoc.modeling import grid_params, simple_pipeline_cv
 
 # Let us try to train a model and pick the best hyperparameters. `grid_params` is a dict of simple `grid_param` for several models. You can use it for a simple analysis.
 #
 # `simple_pipline_cv` creates a simple `Pipeline` instance which consists of a Transformer for preprocessing (such as `MinMaxScaler`) and an ordinary estimator instance and put it in `GridSearchCV`. 
+#
+# Remark: We use 2-fold cross-validation just only for the CI-pipeline.
 
 # +
 from sklearn.linear_model import LogisticRegression
 
 plr = simple_pipeline_cv(name="plr", model=LogisticRegression(penalty="elasticnet", solver="saga"), 
-                         param_grid=grid_params["LogisticRegression"]) ## GridSearchCV instance
+                         param_grid=grid_params["LogisticRegression"], cv=2) ## GridSearchCV instance
 plr.fit(X_train, y_train);
 # -
 
@@ -125,10 +127,11 @@ from adhoc.modeling import show_coefficients
 show_coefficients(plr, X_train.columns).sort_values(by=1.0, ascending=False)
 
 # +
+from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
-tree = simple_pipeline_cv("tree", DecisionTreeClassifier(random_state=3), 
-                          grid_params["DecisionTree"])
+tree = GridSearchCV(DecisionTreeClassifier(random_state=3),
+                    grid_params["DecisionTree"], cv=2)
 tree.fit(X_train,y_train)
 cv_results_summary(tree)
 # -
@@ -151,9 +154,8 @@ s_fi_tree[s_fi_tree > 0]
 # +
 from sklearn.ensemble import RandomForestClassifier
 
-rf = simple_pipeline_cv(name="rf", 
-                        model=RandomForestClassifier(random_state=3),
-                        param_grid=grid_params["RandomForest"])
+rf = GridSearchCV(RandomForestClassifier(random_state=3),
+                  grid_params["RandomForest"], cv=2)
 rf.fit(X_train,y_train)
 cv_results_summary(rf)
 # -
@@ -164,9 +166,8 @@ s_fi_rf[s_fi_rf>0.01]
 # +
 from xgboost.sklearn import XGBClassifier
 
-xgb = simple_pipeline_cv(name="xgb",
-                         model=XGBClassifier(random_state=51),
-                         param_grid=grid_params["XGB"])
+xgb = GridSearchCV(XGBClassifier(random_state=51),
+                   grid_params["XGB"], cv=2)
 xgb.fit(X_train,y_train)
 cv_results_summary(xgb)
 # -
@@ -475,4 +476,7 @@ show_profit(df_profit, best_n_try_test)
 
 df_profit.loc[best_n_try_test,:]
 
+# ## Environment
 
+# %load_ext watermark
+# %watermark -v -n -m -p numpy,scipy,sklearn,pandas,matplotlib,seaborn

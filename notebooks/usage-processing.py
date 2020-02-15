@@ -58,38 +58,46 @@ rcParams['figure.figsize'] = 14, 6 ## width, height (inches)
 import warnings
 warnings.filterwarnings("ignore")
 
-# As a sample dataset we use [Adult dataset](http://archive.ics.uci.edu/ml/datasets/Adult). You should consult the linked page for a brief explanation about the fields. The following unittest code downloads the data file and stores it as `../data/adult.csv`.
+try:
+    from adhoc.utilities import fetch_adult_dataset
+except ImportError:
+    import sys
+    sys.path.append("..")
+    from adhoc.utilities import fetch_adult_dataset
 
-# %run ../test/test_data.py
-
-utc = pytz.timezone("UTC")
+# As a sample dataset we use [Adult dataset](http://archive.ics.uci.edu/ml/datasets/Adult). You should consult the linked page for a brief explanation about the fields. The following code downloads the data file and stores it as `../data/adult.csv` (if you have not downloaded it).
 
 # +
-df = pd.read_csv("../data/adult.csv")
+from pathlib import Path
+
+csv_path = Path("../data/adult.csv")
+fetch_adult_dataset(csv_path)
+
+# +
+df = pd.read_csv(str(csv_path))
 
 ## dummy variable in datetime 
 np.random.seed(51)
-base_day = datetime(year=2019, month=4, day=1, tzinfo=utc)
+
+base_day = datetime(year=2019, month=4, day=1, tzinfo=pytz.timezone("UTC"))
 df["dummy_ts"] = [base_day + timedelta(days=d) for d in 
                   np.random.normal(loc=0, scale=30, size=df.shape[0])]
 df["dummy_ts"][0] = np.nan
 df["dummy_ym"] = df["dummy_ts"].apply(lambda ts: ts.date().replace(day=1))
 
 df.head()
-
-# +
-import sys
-sys.path.append("..")
-
-from adhoc.processing import Inspector
 # -
 
 # ### 1. Check the quality of data
 #
 # Creating an instance of `Inspector`, you can get an overview of the data quality of your dataset.
 
+# +
+from adhoc.processing import Inspector
+
 inspector = Inspector(df, m_cats=20)
 inspector
+# -
 
 # First of all the instance `inspector` is **not a DataFrame**. The default representation of the instance is the result of the inspection of the given DataFrame. You can access the DataFrame by the property `inspector.result`.
 

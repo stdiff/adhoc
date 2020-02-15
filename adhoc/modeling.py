@@ -63,7 +63,7 @@ def add_prefix_to_param(prefix:str, param_grid:dict) -> Dict[str,list]:
 
 def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
                        cv:int=5, scoring:Any="accuracy", scaler:BaseEstimator=None,
-                       **kwarg) -> GridSearchCV:
+                       return_train_score=True, **kwarg) -> GridSearchCV:
     """
     Create a pipeline with only one scaler and an estimator
 
@@ -73,6 +73,7 @@ def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
     :param cv: number of folds in CV
     :param scoring: See https://scikit-learn.org/stable/modules/model_evaluation.html
     :param scaler: Transfoer instance. The default value is MinMaxScaler()
+    :param return_train_score: if self.cv_results_ contains the average training scores
     :param kwarg: arguments for GridSearchCV
     :return: GridSearchCV instance
     """
@@ -81,7 +82,8 @@ def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
 
     pipeline = Pipeline([("scaler", scaler),  (name, model)])
     param_grid = add_prefix_to_param(name, param_grid)
-    model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True, **kwarg)
+    model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
+                         return_train_score=return_train_score, **kwarg)
     return model
 
 
@@ -102,7 +104,7 @@ def cv_results_summary(grid:GridSearchCV, alpha:float=0.05) -> pd.DataFrame:
     df = pd.DataFrame(grid.cv_results_)
 
     n_fold = grid.cv ## number of folds in CV
-    delta =  df["std_test_score"]*stats.t.ppf(1-alpha/2, n_fold-1)
+    delta = df["std_test_score"]*stats.t.ppf(1-alpha/2, n_fold-1)/np.sqrt(n_fold)
     df["test_CI_low"] = df["mean_test_score"] - delta
     df["test_CI_high"] = df["mean_test_score"] + delta
 
@@ -110,7 +112,12 @@ def cv_results_summary(grid:GridSearchCV, alpha:float=0.05) -> pd.DataFrame:
     param_list = [k for k in grid.cv_results_.keys() if k.startswith("param_")]
 
     cols = ["rank_test_score", "mean_test_score", "std_test_score",
-            "test_CI_low", "test_CI_high"] + param_list
+        "test_CI_low", "test_CI_high"]
+
+    if grid.return_train_score:
+        cols.append("mean_train_score")
+
+    cols.extend(param_list)
 
     df = df[cols].copy()
     df.set_index(cols[0], inplace=True)
@@ -155,10 +162,14 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
     if not hasattr(model, "coef_") or not hasattr(model, "intercept_"):
         raise Exception("You probably have no linear model")
 
-    ## If we have a binary classifier, model.coef_ is an array of shape (1,p),
-    ## but model.class_ contains two classes. Thus we need to pick the positive class
-    ## TODO: Adjustment for a regressor
-    labels = model.classes_ if len(model.classes_) > 2 else [model.classes_[1]]
+    if hasattr(model,"classes_"):
+        ## classification
+        ## If we have a binary classifier, model.coef_ is an array of shape (1,p),
+        ## but model.class_ contains two classes. Thus we need to pick the positive class
+        labels = model.classes_ if len(model.classes_) > 2 else [model.classes_[1]]
+    else:
+        ## regression
+        labels = ["coefficient"]
 
     df_coef = pd.DataFrame(model.coef_.T, index=columns, columns=labels)
     df_intercept = pd.DataFrame([model.intercept_], index=["intercept"], columns=labels)

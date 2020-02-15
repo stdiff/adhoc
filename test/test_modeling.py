@@ -7,7 +7,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, ElasticNet
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
@@ -25,26 +25,28 @@ class ModelingTest(TestCase):
     boston_X = None
     boston_y = None
     boston_tree = None
-
+    boston_enet = None
+    breast_cancer_X = None
+    breast_cancer_y = None
+    breast_cancer_plt = None
 
     @classmethod
     def setUpClass(cls) -> None:
         np.random.seed(1)
 
-        ## iris dataset
+        ## iris (multi-class classification)
         df = load_iris(target="label")
         df = df.sample(frac=1,replace=False)
         cls.iris_X = df.drop("label", axis=1)
         cls.iris_y = df["label"]
 
         cls.iris_plr = GridSearchCV(
-            LogisticRegression(solver="liblinear",
-                               multi_class="auto"),
+            LogisticRegression(solver="liblinear", multi_class="auto"),
             param_grid={"C":[0.1,1]},
-            cv=3)
+            cv=3, iid=False, return_train_score=True)
         cls.iris_plr.fit(cls.iris_X,cls.iris_y)
 
-        ## boston dataset
+        ## boston dataset (regression)
         target = "price"
         df = load_boston(target=target)
         df = df.sample(frac=1,replace=False)
@@ -54,8 +56,26 @@ class ModelingTest(TestCase):
         cls.boston_tree = GridSearchCV(
             DecisionTreeRegressor(),
             param_grid={"max_depth":[3,5,7]},
-            cv=5, scoring="neg_mean_squared_error")
+            cv=5, scoring="neg_mean_squared_error",
+            iid=False, return_train_score=False)
         cls.boston_tree.fit(cls.boston_X, cls.boston_y)
+
+        cls.boston_enet = GridSearchCV(
+            ElasticNet(normalize=True),
+            param_grid={"alpha": [0.1,1.0], "l1_ratio": [0.1,0.5,0.9]},
+            cv=3, scoring="neg_mean_squared_error",
+            iid=False, return_train_score=True)
+        cls.boston_enet.fit(cls.boston_X, cls.boston_y)
+
+        ## breast (binary classification)
+        df = load_breast_cancer("label")
+        cls.breast_cancer_X = df.drop("label", axis=1)
+        cls.breast_cancer_y = df["label"]
+
+        cls.breast_cancer_plr = GridSearchCV(
+            LogisticRegression(solver="liblinear"),
+            param_grid={"C":[0.1,1]}, cv=3, iid=False)
+        cls.breast_cancer_plr.fit(cls.breast_cancer_X, cls.breast_cancer_y)
 
 
     def setUp(self) -> None:
@@ -86,8 +106,8 @@ class ModelingTest(TestCase):
                                    model=plr,
                                    param_grid=param_grid,
                                    scaler=MinMaxScaler(),
-                                   cv=cv
-                                   )
+                                   cv=cv,
+                                   iid=False)
         pipeline = model.estimator
 
         self.assertTrue(isinstance(model,GridSearchCV))
@@ -124,6 +144,12 @@ class ModelingTest(TestCase):
         self.assertAlmostEqual(0, (delta_left - delta_right).mean())
 
 
+    def test_cv_results_summary2(self):
+        ## including
+        results = cv_results_summary(self.iris_plr, alpha=0.05)
+        self.assertTrue("mean_train_score" in results.columns)
+
+
     def test_pick_the_last_estimator(self):
         """unittest for pick_the_last_estimator"""
         ## Case 1) Pipeline
@@ -131,7 +157,7 @@ class ModelingTest(TestCase):
             name="plr",
             model=LogisticRegression(solver="liblinear",
                                      multi_class="auto"),
-            param_grid={"C":[0.1,1]}, cv=3)
+            param_grid={"C":[0.1,1]}, cv=3, iid=False)
         model1.fit(self.iris_X,self.iris_y)
         estimator1 = pick_the_last_estimator(model1)
 
@@ -142,18 +168,37 @@ class ModelingTest(TestCase):
         self.assertTrue(isinstance(estimator2,LogisticRegression))
 
 
-    def test_show_coefficients(self):
+    def test_show_coefficients_classification(self):
         """unittest for show_coefficients"""
         reg_coef = show_coefficients(self.iris_plr,
                                      self.iris_X.columns)
 
-        self.assertTrue(isinstance(reg_coef,pd.DataFrame))
+        self.assertIsInstance(reg_coef, pd.DataFrame)
         self.assertEqual((5,3), reg_coef.shape)
         self.assertTrue("intercept", reg_coef.index[4])
 
         ## raise an Exception if coef_ attribute is not available.
         with self.assertRaises(Exception):
             show_coefficients(self.boston_tree, self.boston_X.columns)
+
+
+    def test_show_coefficients_regression(self):
+        reg_coef = show_coefficients(self.boston_enet,
+                                     self.boston_X.columns)
+
+        self.assertIsInstance(reg_coef, pd.DataFrame)
+        self.assertEqual((self.boston_X.shape[1]+1,1), reg_coef.shape)
+        self.assertEqual(["coefficient"], reg_coef.columns.tolist())
+        self.assertTrue("intercept", reg_coef.index[-1])
+
+    def test_show_coefficients_binary_classification(self):
+        reg_coef = show_coefficients(self.breast_cancer_plr,
+                                     self.breast_cancer_X.columns)
+
+        self.assertIsInstance(reg_coef, pd.DataFrame)
+        self.assertEqual((self.breast_cancer_X.shape[1]+1,1), reg_coef.shape)
+        self.assertEqual(["malignant"], reg_coef.columns.tolist())
+        self.assertTrue("intercept", reg_coef.index[-1])
 
 
     def test_show_feature_importance(self):
@@ -230,7 +275,6 @@ class TestROCCurve(TestCase):
 
     def test_ROCCurve(self):
         """unittest for ROCCurve"""
-
         ## auc attribute
         self.assertTrue(isinstance(self.roc.auc,float))
         self.assertTrue(self.roc.auc >= 0.5)
@@ -274,7 +318,6 @@ class TestROCCurve(TestCase):
             proportion_positive=self.roc.y_true.mean(),
             scaling=True)
 
-        print(df_scoring.tail())
         ## The original index must lie in the DataFrame
         self.assertTrue("index", df_scoring.columns)
 
