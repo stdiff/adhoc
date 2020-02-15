@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="adhoc",
-    version="0.1",
+    version="0.2",
     description="Module for ad hoc analysis",
     url="https://github.com/stdiff/adhoc",
     author="Hironori Sakai",

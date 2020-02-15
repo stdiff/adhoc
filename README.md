@@ -1,6 +1,6 @@
 # adhoc
 
-Build Status: [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=dev)](https://travis-ci.org/stdiff/adhoc)
+Build Status (master): [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=master)](https://travis-ci.org/stdiff/adhoc)
 
 ## Goal of this repository/library 
 
@@ -25,18 +25,34 @@ almost everywhere and documentation about
 - [processing](https://nbviewer.jupyter.org/github/stdiff/adhoc/blob/dev/notebooks/usage-processing.ipynb)
 - [modeling](https://nbviewer.jupyter.org/github/stdiff/adhoc/blob/dev/notebooks/usage-modeling.ipynb)
 
+
 ## Setup: Python
 
-We are assumed to use [Anaconda](https://www.anaconda.com/). You can create
-your new environment by the following command.
+If you want to use `virtualenv`, you can create a new environment
+by the following command
 
-    > conda create -n your_env python=3.5 
+    > python -m venv your_env
     
-Then you need to install necessary libraries.  
-In [requirements-local.txt](requirements-local.txt) 
+In the working directory you can find a directory `your_env` for 
+the environment. You can activate the environment by  
+
+    > source your_env/bin/activate
+
+If you want to use [Anaconda](https://www.anaconda.com/), 
+you can create a new conda envrionment by the following command.
+
+    > conda create -n your_env python=3.5
+    
+You can activate the environment by 
+
+    > conda activate your_env
+
+    
+### Libraries 
+     
 you can find a minimal set of libraries for ad hoc analysis.
     
-    (your_env) > pip install -r requirements-local.txt
+    (your_env) > pip install -r requirements.txt
 
 Probably you need more libraries. After installing them, you should keep
 the list of installed libraries by   
@@ -46,12 +62,9 @@ the list of installed libraries by
 or
 
     (your_env) > conda env export > conda.yaml
-    
-The following command starts the conda environment.
 
-    > conda activate your_env
-    
-### jupytext
+
+#### jupytext
 
 [jupytext](https://github.com/mwouts/jupytext) generate a Python script
 if you create a jupyter notebook and synchronize the pair. The points are
@@ -64,7 +77,7 @@ if you create a jupyter notebook and synchronize the pair. The points are
 Namely jupytext makes it easy to manage notebooks on a git repository.
 
 
-### watermark
+#### watermark
 
 With this library you can put your environment on your notebook briefly.
 Write the following two lines in a cell and let it run.
@@ -72,9 +85,20 @@ Write the following two lines in a cell and let it run.
     %load_ext watermark
     %watermark -v -n -m -p numpy,scipy,sklearn,pandas,matplotlib,seaborn
 
-### Install this library 
 
-    pip install https://github.com/stdiff/adhoc/archive/v0.1.zip  
+#### Install "adhoc"
+
+    pip install https://github.com/stdiff/adhoc/archive/v0.2.zip
+    
+Note that this library is not registered in PyPI, therefore the line 
+
+    adhoc==0.2
+    
+in `requirements.txt` raises an error. To avoid this error you can put 
+the following line instead of the above line 
+
+    git+git://github.com/stdiff/adhoc.git@v0.2#egg=adhoc
+
 
 ## Setup: JupyterLab
 
@@ -84,6 +108,8 @@ There are some useful extensions for Jupyter lab.
   `jupyter --paths` command shows the directories where you might find
   the config file.
 - If you have not created it yet, execute `jupyter notebook --generate-config`.
+- `jupyter labextension list` shows the list of installed jupyter extensions
+
 
 ### Spell checker
 
@@ -91,27 +117,45 @@ There are some useful extensions for Jupyter lab.
 works on Markdown cells and highlights misspelled words, but this 
 does not correct them. 
 
+
 ### JupyterLab Template
 
 [This extension](https://github.com/timkpaine/jupyterlab_templates)
 enables us to use a notebook template very easily. Therefore you 
-do not need to type the same import statements. 
+do not need to type the same import statements.
+
+Note that the extension looks for templates files under the *subdirectories*
+of the specified directories. 
+
 
 ### DrawIO
 
 With [DrawIO](https://github.com/QuantStack/jupyterlab-drawio) 
-you can draw diagrams easily.  
+you can draw diagrams easily.
+
+NB. This might not wort because of 
+[this issue](https://github.com/jupyterlab/jupyterlab/issues/3506#issuecomment-586510580). 
+
 
 ## useful references 
+
+### pandas
+
+- [visualization](https://pandas.pydata.org/docs/user_guide/visualization.html)
+
 
 ### matplotlib
 
 - [list of cmap strings](https://matplotlib.org/examples/color/colormaps_reference.html)
 
+
 ### seaborn 
 
 - [API reference](http://seaborn.pydata.org/api.html)
 
+
 ### sckit-learn
 
 - [scoring parameter](https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter)
+
+
