@@ -84,12 +84,12 @@ y_train.value_counts()
 #
 # If you specify all dropping values manually, then you can integrate your `MultiConverter` instance in `Pipeline` without any problem.
 
-# +
-import sys
-sys.path.append("..")
-
-from adhoc.modeling import grid_params, simple_pipeline_cv
-# -
+try:
+    from adhoc.modeling import grid_params, simple_pipeline_cv
+except ImportError:
+    import sys
+    sys.path.append("..")
+    from adhoc.modeling import grid_params, simple_pipeline_cv
 
 # Let us try to train a model and pick the best hyperparameters. `grid_params` is a dict of simple `grid_param` for several models. You can use it for a simple analysis.
 #
@@ -475,4 +475,7 @@ show_profit(df_profit, best_n_try_test)
 
 df_profit.loc[best_n_try_test,:]
 
+# ## Environment
 
+# %load_ext watermark
+# %watermark -v -n -m -p numpy,scipy,sklearn,pandas,matplotlib,seaborn
