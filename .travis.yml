@@ -14,5 +14,6 @@ script:
   - python -m unittest test/test_modeling.py
   - python setup.py sdist bdist_wheel
   - pip install dist/adhoc-0.1-py3-none-any.whl
-  - cd notebooks && python usage-processing.py
-  - cd notebooks && python usage-modeling.py
+  - cd notebooks
+  - python usage-processing.py
+  - python usage-modeling.py
