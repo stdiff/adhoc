@@ -6,6 +6,7 @@ import pandas as pd
 
 from adhoc.processing import file_info
 from adhoc.processing import Inspector, VariableType, MultiConverter
+from adhoc.utilities import fetch_adult_dataset
 
 #test_data = Path("data/adult.csv")
 
@@ -15,6 +16,7 @@ class ProcessingTest(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.test_data = Path("data/adult.csv")
+        fetch_adult_dataset(cls.test_data)
 
 
     def test_file_info(self):
