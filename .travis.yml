@@ -13,8 +13,11 @@ script:
   - python -m unittest test/test_processing.py
   - python -m unittest test/test_utilities.py
   - python -m unittest test/test_modeling.py
+  - bash <(curl -s https://codecov.io/bash)
   - python setup.py sdist bdist_wheel
   - pip install dist/adhoc-0.2-py3-none-any.whl
   - cd notebooks
   - python usage-processing.py
   - python usage-modeling.py
+
+
