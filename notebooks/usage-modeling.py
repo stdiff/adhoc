@@ -166,8 +166,9 @@ s_fi_rf[s_fi_rf>0.01]
 # +
 from xgboost.sklearn import XGBClassifier
 
-xgb = GridSearchCV(XGBClassifier(random_state=51),
-                   grid_params["XGB"], cv=2)
+xgb_params = {"n_estimators":[10,20], "learning_rate":[0.1,0.01]}
+xgb = GridSearchCV(XGBClassifier(max_depth=10, random_state=51),
+                   xgb_params, cv=2)
 xgb.fit(X_train,y_train)
 cv_results_summary(xgb)
 # -
