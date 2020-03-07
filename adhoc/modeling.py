@@ -15,6 +15,7 @@ from sklearn.model_selection import GridSearchCV
 ## for show_tree
 from io import StringIO
 from sklearn.tree import export_graphviz
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from IPython.display import Image
 import pydot
 
@@ -178,17 +179,18 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
     return df_coef
 
 
-def show_tree(grid:GridSearchCV, columns:List[str]) -> Image:
+def show_tree(model:Union[DecisionTreeRegressor, DecisionTreeClassifier, GridSearchCV],
+              columns:Union[List[str],pd.Index]) -> Image:
     """
     Visualize the given trained DecisionTree model on Jupyter.
     This function requires also pydot.
 
-    :param grid: GridSearchCV instance with a Tree model
+    :param model: DecisionTree model or GridSearchCV instance with a Tree model
     :param columns: names of columns
     :return: Image instance (for Jupyter)
     """
-
-    model = pick_the_last_estimator(grid)
+    if isinstance(model, GridSearchCV):
+        model = pick_the_last_estimator(model)
 
     dot_data = StringIO()
     export_graphviz(model, out_file=dot_data, feature_names=columns,
