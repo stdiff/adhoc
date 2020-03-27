@@ -216,16 +216,31 @@ class ModelingTest(TestCase):
 
     def test_show_feature_importance(self):
         """unittest for show_feature_importance"""
-        importance = show_feature_importance(
-            grid=self.boston_tree, columns=self.boston_X.columns)
+        self.assertIsInstance(self.boston_tree, GridSearchCV)
 
-        self.assertTrue(isinstance(importance,pd.Series))
-        self.assertEqual(len(self.boston_X.columns), len(importance))
+        importance = show_feature_importance(
+            estimator=self.boston_tree,
+            columns=self.boston_X.columns)
+
+        self.assertIsInstance(importance, pd.Series)
+        self.assertEqual(self.boston_X.shape[1], len(importance))
 
         ## raise an Exception if feature_importances_ attr is not available
         with self.assertRaises(AttributeError):
-            show_feature_importance(grid=self.iris_plr,
+            show_feature_importance(estimator=self.iris_plr,
                                     columns=self.iris_X.columns)
+
+    def test_show_feature_importance_model(self):
+        model = pick_the_last_estimator(self.boston_tree)
+        self.assertIsInstance(model, DecisionTreeRegressor)
+        self.assertNotIsInstance(model, GridSearchCV)
+
+        importance = show_feature_importance(
+            estimator=model,
+            columns=self.boston_X.columns)
+
+        self.assertIsInstance(importance, pd.Series)
+        self.assertEqual(self.boston_X.shape[1], len(importance))
 
 
     def test_recover_label(self):
