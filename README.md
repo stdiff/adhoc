@@ -88,16 +88,16 @@ Write the following two lines in a cell and let it run.
 
 #### Install "adhoc"
 
-    pip install https://github.com/stdiff/adhoc/archive/v0.2.zip
+    pip install https://github.com/stdiff/adhoc/archive/v0.3.zip
     
 Note that this library is not registered in PyPI, therefore the line 
 
-    adhoc==0.2
+    adhoc==0.3
     
 in `requirements.txt` raises an error. To avoid this error you can put 
 the following line instead of the above line 
 
-    git+git://github.com/stdiff/adhoc.git@v0.2#egg=adhoc
+    git+git://github.com/stdiff/adhoc.git@v0.3#egg=adhoc
 
 
 ## Setup: JupyterLab
