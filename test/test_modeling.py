@@ -11,10 +11,11 @@ from sklearn.linear_model import LogisticRegression, ElasticNet
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
+from IPython.display import Image
 
 from adhoc.modeling import add_prefix_to_param, simple_pipeline_cv
 from adhoc.modeling import cv_results_summary, pick_the_last_estimator
-from adhoc.modeling import show_coefficients, show_feature_importance
+from adhoc.modeling import show_coefficients, show_tree, show_feature_importance
 from adhoc.modeling import recover_label, ROCCurve
 from adhoc.utilities import load_boston, load_iris, load_breast_cancer
 
@@ -201,18 +202,45 @@ class ModelingTest(TestCase):
         self.assertTrue("intercept", reg_coef.index[-1])
 
 
+    def test_show_tree(self):
+        ## GridSearchCV instance
+        image = show_tree(self.boston_tree, self.boston_X.columns)
+        self.assertIsInstance(image, Image)
+
+        ## DecisionTreeRegressor
+        tree = DecisionTreeRegressor(max_depth=3, random_state=2)
+        tree.fit(self.boston_X, self.boston_y)
+        image = show_tree(tree, self.boston_X.columns)
+        self.assertIsInstance(image, Image)
+
+
     def test_show_feature_importance(self):
         """unittest for show_feature_importance"""
-        importance = show_feature_importance(
-            grid=self.boston_tree, columns=self.boston_X.columns)
+        self.assertIsInstance(self.boston_tree, GridSearchCV)
 
-        self.assertTrue(isinstance(importance,pd.Series))
-        self.assertEqual(len(self.boston_X.columns), len(importance))
+        importance = show_feature_importance(
+            estimator=self.boston_tree,
+            columns=self.boston_X.columns)
+
+        self.assertIsInstance(importance, pd.Series)
+        self.assertEqual(self.boston_X.shape[1], len(importance))
 
         ## raise an Exception if feature_importances_ attr is not available
         with self.assertRaises(AttributeError):
-            show_feature_importance(grid=self.iris_plr,
+            show_feature_importance(estimator=self.iris_plr,
                                     columns=self.iris_X.columns)
+
+    def test_show_feature_importance_model(self):
+        model = pick_the_last_estimator(self.boston_tree)
+        self.assertIsInstance(model, DecisionTreeRegressor)
+        self.assertNotIsInstance(model, GridSearchCV)
+
+        importance = show_feature_importance(
+            estimator=model,
+            columns=self.boston_X.columns)
+
+        self.assertIsInstance(importance, pd.Series)
+        self.assertEqual(self.boston_X.shape[1], len(importance))
 
 
     def test_recover_label(self):

@@ -15,6 +15,7 @@ from sklearn.model_selection import GridSearchCV
 ## for show_tree
 from io import StringIO
 from sklearn.tree import export_graphviz
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from IPython.display import Image
 import pydot
 
@@ -178,17 +179,18 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
     return df_coef
 
 
-def show_tree(grid:GridSearchCV, columns:List[str]) -> Image:
+def show_tree(model:Union[DecisionTreeRegressor, DecisionTreeClassifier, GridSearchCV],
+              columns:Union[List[str],pd.Index]) -> Image:
     """
     Visualize the given trained DecisionTree model on Jupyter.
     This function requires also pydot.
 
-    :param grid: GridSearchCV instance with a Tree model
+    :param model: DecisionTree model or GridSearchCV instance with a Tree model
     :param columns: names of columns
     :return: Image instance (for Jupyter)
     """
-
-    model = pick_the_last_estimator(grid)
+    if isinstance(model, GridSearchCV):
+        model = pick_the_last_estimator(model)
 
     dot_data = StringIO()
     export_graphviz(model, out_file=dot_data, feature_names=columns,
@@ -197,25 +199,26 @@ def show_tree(grid:GridSearchCV, columns:List[str]) -> Image:
     return Image(graph.create_png())
 
 
-def show_feature_importance(grid:GridSearchCV, columns:List[str]) -> pd.Series:
+def show_feature_importance(estimator:BaseEstimator,
+                            columns:Union[List[str],pd.Index]) -> pd.Series:
     """
     Return the series of feature importance of given random forest model.
     XGB model and DecisionTree model can be accepted as well.
 
-    :param grid: fitted GridSearchCV instance with `feature_importances_` attribute
-    :param columns: list of column names
+    :param estimator: fitted Estimator with `feature_importances_` attribute
+    :param columns: list (or pandas.Index) of column names
     :return: Series of feature importance
     """
-    ## TODO: change the name of the method. (Do not use show_)
-    model = pick_the_last_estimator(grid)
+    if isinstance(estimator, GridSearchCV):
+        model = pick_the_last_estimator(estimator)
+    else:
+        model = estimator
 
     if hasattr(model,"feature_importances_"):
         s = pd.Series(model.feature_importances_, index=columns, name="importance")
         return s.sort_values(ascending=False)
     else:
         raise AttributeError("Your model does not have an attribute 'feature_importances_'.")
-
-
 
 
 def recover_label(data:pd.DataFrame, field2columns:Dict[str,List[str]],

@@ -11,7 +11,7 @@ from sklearn import datasets
 from adhoc.utilities import TempDir
 from adhoc.utilities import bunch2dataframe
 from adhoc.utilities import load_iris, load_boston, load_breast_cancer, load_diabetes
-from adhoc.utilities import bins_by_tree, to_excel
+from adhoc.utilities import grep_data, bins_by_tree, to_excel
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -72,6 +72,22 @@ class TestUtilities(TestCase):
         self.assertTrue(isinstance(df,pd.DataFrame))
         self.assertEqual((442,11), df.shape)
         self.assertEqual(target, list(df.columns)[-1])
+
+
+    def test_grep_data(self):
+        df = pd.DataFrame({
+            "col1": list("abcdefg"),
+            "col2": [2,3,5,7,11,13,17]
+        })
+
+        df_selected = grep_data(df,"col1","[a-c]")
+        self.assertIsInstance(df_selected,pd.DataFrame)
+        self.assertEqual(3, df_selected.shape[0])
+
+        ## specified column will be converted in str
+        df_selected = grep_data(df,"col2",r"^\d$")
+        self.assertIsInstance(df_selected,pd.DataFrame)
+        self.assertEqual(4, df_selected.shape[0])
 
 
     def test_bins_by_tree(self):

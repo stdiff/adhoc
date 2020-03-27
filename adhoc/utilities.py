@@ -8,6 +8,7 @@ from itertools import product
 from pathlib import Path
 import tempfile
 import shutil
+import re
 
 import numpy as np
 import pandas as pd
@@ -156,10 +157,18 @@ def fetch_adult_dataset(csv_path:Path):
         raise Exception("You seem to have downloaded a wrong file")
 
 
+def grep_data(data:pd.DataFrame, column:str, expr:str) -> pd.DataFrame:
+    """
+    Pick the rows with a specified expression and return them as
+    the subset of the given DataFrame.
 
-
-
-    pass
+    :param data: panda's DataFrame
+    :param column: column to check
+    :param expr: expression to find (passed to re.search)
+    :return: copy of the matched rows
+    """
+    s_matched = data[column].apply(lambda s: True if re.search(expr,str(s)) else False)
+    return data[s_matched].copy()
 
 
 def facet_grid_scatter_plot(data:pd.DataFrame, row:str, col:str,
