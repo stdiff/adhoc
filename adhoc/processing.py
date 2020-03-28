@@ -5,6 +5,8 @@ Class for checking data quality
 from typing import Any, List, Union, Dict
 from enum import Enum
 from pathlib import Path
+from datetime import datetime
+from pytz import utc
 import hashlib
 
 import numpy as np
@@ -268,13 +270,13 @@ class Inspector:
         return self.data[fields].describe().T
 
 
-    def distribution_timestamps(self, fields:list=None):
+    def distribution_timestamps(self, fields:List[str]=None):
         """
         return a DataFrame showing the distribution of the datetime variables.
         If no fields are given, use all datetime variables.
 
-        :param fields: list of fields in datetime
-        :return: DataFrame of distributions
+        :param fields: list of fields in datetime or date
+        :return: DataFrame of distributions (looks like pandas.DataFrame.describe().T)
         """
 
         if fields is None:
@@ -282,15 +284,28 @@ class Inspector:
             is_datetime = s_dtype.apply(lambda x: x.startswith("datetime"))
             fields = s_dtype[is_datetime].index
 
-        df_stats = []
+        ## Compute the statistics by shifting by a base point.
+        ## NB: This procedure is not necessary.
 
+        df_stats = []
         for ts_col in fields:
-            ts0 = self.data[ts_col].dropna().iloc[0] ## pick base point
-            s_delta = self.data[ts_col] - ts0
+            ts0 = self.data[ts_col].dropna().iloc[0] ## pick a base point
+            s_delta = self.data[ts_col] - ts0  ## shift by the base point
+
+            if not isinstance(ts0,datetime):
+                ## If the base point is not a datetime instance,
+                ## then we can not shift them back by the base point,
+                ## because of the data types. Therefore we convert it
+                ## in a datetime format.
+                ts0 = datetime(year=ts0.year, month=ts0.month, day=ts0.day,
+                               tzinfo=utc)
+
             ts_stats = pd.DataFrame(s_delta.describe()).T
 
             for idx in ts_stats.columns:
                 if idx not in ["count", "std"]:
+                    ## The standard deviation is a shift invariant,
+                    ## therefore we do not shift it.
                     ts_stats[idx] += ts0
 
             df_stats.append(ts_stats)

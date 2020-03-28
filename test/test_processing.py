@@ -1,5 +1,8 @@
 from unittest import TestCase
+
 from pathlib import Path
+from datetime import datetime, timedelta, date
+from pytz import utc
 
 import numpy as np
 import pandas as pd
@@ -131,6 +134,34 @@ class ProcessingTest(TestCase):
             df_con.shape,
             (len(inspector.get_cons()), 8)
         )
+
+    def test_distribution_timestamps(self):
+        base_dt = datetime(year=2019, month=4, day=1, tzinfo=utc)
+
+        df = pd.DataFrame({
+            "col1": [base_dt + timedelta(days=d) for d in range(-2,3)],
+            "col2": [base_dt + timedelta(hours=3*h) for h in range(-2,3)],
+            "dummy": list(range(-2,3))
+        })
+
+        df_stats = Inspector(df).distribution_timestamps()
+        self.assertEqual(2, df_stats.shape[0])
+        self.assertEqual(base_dt, df_stats.loc["col1", "mean"])
+        self.assertEqual(base_dt, df_stats.loc["col2", "mean"])
+        self.assertIsInstance(df_stats.loc["col1","std"], timedelta)
+
+
+    def test_distribution_timestamps_dates(self):
+        base_date = date(year=2019, month=4, day=1)
+        data_dates = [base_date + timedelta(days=d) for d in range(6)]
+        data_dates[0] = np.nan
+        df = pd.DataFrame({"col": data_dates})
+        df_stats = Inspector(df).distribution_timestamps(fields=["col"])
+
+        self.assertEqual(1, df_stats.shape[0])
+        self.assertEqual(5, df_stats.loc["col","count"])
+        self.assertEqual(4, df_stats.loc["col","mean"].day)
+        self.assertIsInstance(df_stats.loc["col","std"], timedelta)
 
 
     def test_significance(self):
