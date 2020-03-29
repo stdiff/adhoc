@@ -17,7 +17,7 @@ setup(
                         "seaborn>=0.10.0",
                         "scikit-learn>=0.22.2",
                         "pydot>=1.4.1",
-                        "graphviz>=0.13.2"
+                        "graphviz>=0.13.2",
                         "openpyxl>=3.0.3",
                         "xlrd>=1.2.0"
                         ],
