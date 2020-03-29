@@ -1,3 +1,7 @@
+"""
+unittest for adhoc/processing.py
+"""
+
 from unittest import TestCase
 
 from pathlib import Path
