@@ -97,7 +97,6 @@ def load_breast_cancer(target:str="label") -> pd.DataFrame:
     :param target: name of the target variable
     :return: DataFrame of data set
     """
-
     breast_cancer = datasets.load_breast_cancer()
     df = bunch2dataframe(breast_cancer, target=target)
     df[target] = [breast_cancer.target_names[y].replace(" ","_") for y in df[target]]
@@ -182,6 +181,12 @@ def facet_grid_scatter_plot(data:pd.DataFrame, row:str, col:str,
 
         ggplot(data, aes(x,y,color=c)) + geom_point() + facet_grid(row~col)
 
+    (if c is continuous) or
+
+        ggplot(data, aes(x,y,color=hue)) + geom_point() + facet_grid(row~col)
+
+    (if c is not continuous).
+
     :param data: pandas DataFrame
     :param row: field of rows in a grid. The field must be categorical.
     :param col: field of columns in a grid. The field must be categorical.
@@ -215,18 +220,17 @@ def facet_grid_scatter_plot(data:pd.DataFrame, row:str, col:str,
         ## put a common color bar on the right
         vmin, vmax = data[c].min(), data[c].max()
 
-        fg.fig.subplots_adjust(right=0.9)
-        cax = fg.fig.add_axes([0.92, .25, .02, .6])
+        fg.fig.subplots_adjust(right=0.85)
+        cax = fg.fig.add_axes([0.90, 0.25, 0.02, 0.6]) ## TODO: is it universal?
         points = plt.scatter([], [], c=[], vmin=vmin, vmax=vmax, cmap=cmap)
-        fg.fig.colorbar(points, cax=cax)
+        color_bar = fg.fig.colorbar(points, cax=cax)
+        color_bar.set_label(c, rotation=270, labelpad=25)
 
     else:
         ## hue is given => discrete variable
         fg = sns.FacetGrid(data=data, row=row, col=col, hue=hue,
                            aspect=aspect, margin_titles=margin_titles, **kwargs)
         fg.map(plt.scatter, x, y, alpha=alpha).add_legend()
-
-    #plt.show()
 
 
 def bins_by_tree(data:pd.DataFrame, field:str, target:str,
@@ -255,7 +259,7 @@ def bins_by_tree(data:pd.DataFrame, field:str, target:str,
     else:
         tree = DecisionTreeClassifier(max_leaf_nodes=n_bins, **kwargs)
 
-    ## TODO: cross-validation
+    ## TODO: cross-validation (?)
     tree.fit(data[[field]], data[target])
 
     ## grid space whose points can be separators

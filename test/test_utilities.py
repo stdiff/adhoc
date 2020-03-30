@@ -9,9 +9,10 @@ import pandas as pd
 from sklearn import datasets
 
 from adhoc.utilities import TempDir
-from adhoc.utilities import bunch2dataframe
+from adhoc.utilities import bunch2dataframe, fetch_adult_dataset
 from adhoc.utilities import load_iris, load_boston, load_breast_cancer, load_diabetes
 from adhoc.utilities import grep_data, bins_by_tree, to_excel
+from adhoc.utilities import facet_grid_scatter_plot, bins_heatmap
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -74,6 +75,17 @@ class TestUtilities(TestCase):
         self.assertEqual(target, list(df.columns)[-1])
 
 
+    def test_fetch_adult_dataset(self):
+        with TempDir() as tmp_dir:
+            dummy_file = tmp_dir.joinpath("dummy.csv")
+            with dummy_file.open("w") as fo:
+                fo.write("1,2,3\n")
+
+            ## wrong file -> Exception
+            with self.assertRaises(Exception):
+                fetch_adult_dataset(dummy_file)
+
+
     def test_grep_data(self):
         df = pd.DataFrame({
             "col1": list("abcdefg"),
@@ -96,20 +108,74 @@ class TestUtilities(TestCase):
         cols = list(df.columns)
         n_bins = 3
 
+        ## Case) The target variable is continuous
         bins = bins_by_tree(df, field=cols[2], target=cols[3],
                             target_is_continuous=True,
                             n_bins=n_bins, n_points=200, precision=1)
         cats = sorted(bins.unique())
 
-        self.assertTrue(isinstance(bins,pd.Series))
+        self.assertIsInstance(bins, pd.Series)
         self.assertEqual(len(bins.unique()), n_bins)
 
         for cat in cats:
-            self.assertTrue(isinstance(cat,pd.Interval))
+            self.assertIsInstance(cat, pd.Interval)
             self.assertEqual(cat.closed,"right")
 
         self.assertEqual(cats[0].left, -np.inf)
         self.assertEqual(cats[-1].right, np.inf)
+
+        ## Case) The target variable is not continuous
+        bins = bins_by_tree(df, field=cols[2], target=cols[-1],
+                            target_is_continuous=False,
+                            n_bins=n_bins, n_points=200, precision=1)
+        cats = sorted(bins.unique())
+
+        self.assertIsInstance(bins, pd.Series)
+        self.assertEqual(len(bins.unique()), n_bins)
+
+        for cat in cats:
+            self.assertIsInstance(cat, pd.Interval)
+            self.assertEqual(cat.closed,"right")
+
+        self.assertEqual(cats[0].left, -np.inf)
+        self.assertEqual(cats[-1].right, np.inf)
+
+
+    def test_facet_grid_scatter_plot(self):
+        ## Check if it works without any error.
+        np.random.seed(1)
+
+        df = load_iris(target="species")
+        df["grid_col"] = np.random.choice(["c1","c2"],
+                                          size=df.shape[0],
+                                          replace=True)
+        df["grid_row"] = np.random.choice(["r1","r2","r3"],
+                                          size=df.shape[0],
+                                          replace=True)
+
+        facet_grid_scatter_plot(data=df,
+                                row="grid_row", col="grid_col",
+                                x="petal_width", y="petal_length",
+                                c="sepal_width")
+
+        facet_grid_scatter_plot(data=df,
+                                row="grid_row", col="grid_col",
+                                x="petal_width", y="petal_length",
+                                hue="species")
+
+
+    def test_bins_heatmap(self):
+        # check if this function works without error
+        np.random.seed(2)
+        df = load_iris(target="species")
+        df["cat1"] = np.random.choice(["a","b"],
+                                      size=df.shape[0],
+                                      replace=True)
+
+        bins_heatmap(df, cat1="cat1", cat2="species",
+                     x="petal_width", y="petal_length",
+                     target="sepal_length",
+                     n_bins=3)
 
 
     def test_to_excel(self):
