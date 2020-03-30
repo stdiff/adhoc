@@ -16,3 +16,4 @@ script:
   - cd notebooks
   - python usage-processing.py
   - python usage-modeling.py
+  - python sample-diagrams.py
