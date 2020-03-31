@@ -1,7 +1,11 @@
 # adhoc
 
-- Build Status (master): [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=master)](https://travis-ci.org/stdiff/adhoc)
-- Code Coverage (dev): [![codecov](https://codecov.io/gh/stdiff/adhoc/branch/dev/graph/badge.svg)](https://codecov.io/gh/stdiff/adhoc)
+- Build Status:
+  [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=master)](https://travis-ci.org/stdiff/adhoc) (master)
+  [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=dev)](https://travis-ci.org/stdiff/adhoc) (dev)
+- Code Coverage:
+  [![codecov](https://codecov.io/gh/stdiff/adhoc/branch/master/graph/badge.svg)](https://codecov.io/gh/stdiff/adhoc) (master)
+  [![codecov](https://codecov.io/gh/stdiff/adhoc/branch/dev/graph/badge.svg)](https://codecov.io/gh/stdiff/adhoc) (dev)
 
 ## Goal of this repository/library 
 
@@ -151,6 +155,7 @@ NB. This might not wort because of
 
 - [list of cmap strings](https://matplotlib.org/examples/color/colormaps_reference.html)
 - [List of named colors](https://matplotlib.org/3.1.0/gallery/color/named_colors.html)
+
 
 ### seaborn 
 
