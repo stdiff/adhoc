@@ -315,7 +315,8 @@ class TestROCCurve(TestCase):
         self.assertEqual(cols, list(self.roc.scores.columns))
         self.assertEqual("threshold", self.roc.scores.index.name)
 
-        ## predict_thru_threshold
+
+    def test_predict_thru_threshold(self):
         y_pred = self.roc.predict_thru_threshold(threshold=0.5)
         self.assertTrue(isinstance(y_pred,np.ndarray))
 
@@ -324,7 +325,8 @@ class TestROCCurve(TestCase):
 
         self.assertEqual(1, (y_pred == self.y_pred).mean())
 
-        ## get_scores_thru_threshold
+
+    def test_get_scores_thru_threshold(self):
         s = self.roc.get_scores_thru_threshold(0.5)
         self.assertTrue(isinstance(s,pd.Series))
 
@@ -337,11 +339,23 @@ class TestROCCurve(TestCase):
                          s["accuracy"])
         self.assertEqual(0.5, s["threshold"])
 
-        ## get_confusion_matrix
+
+    def test_get_confusion_matrix(self):
         conf = self.roc.get_confusion_matrix(threshold=0.5)
         self.assertTrue(isinstance(conf,pd.DataFrame))
 
-        ## optimize_expected_value
+
+    def test_roc_curve(self):
+        # check if it is error-free
+        self.roc.show_roc_curve()
+
+
+    def test_show_metrics(self):
+        # check if it is error-free
+        self.roc.show_metrics()
+
+
+    def test_optimize_expected_value(self):
         df_scoring = self.roc.optimize_expected_value(
             proportion_positive=self.roc.y_true.mean(),
             scaling=True)
@@ -363,3 +377,9 @@ class TestROCCurve(TestCase):
                                last_row["expected (random)"])
 
         self.assertEqual(self.roc.y_true.sum(), last_row["n_true"])
+
+        ## check if it is error-free
+        self.roc.show_expected_value(
+            proportion_positive=self.roc.y_true.mean(),
+            scaling=True
+        )

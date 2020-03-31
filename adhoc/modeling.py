@@ -439,8 +439,10 @@ class ROCCurve:
 
         return df
 
+
     def show_expected_value(self,
-                            proportion_positive:float=None, scaling:bool=True,
+                            proportion_positive:float=None,
+                            scaling:bool=True,
                             title:str="Expected value of number of positive instance",
                             xlabel:str="Number of tries",
                             ylabel:str="Number of positive instances",
@@ -448,6 +450,19 @@ class ROCCurve:
                             expected_score:str="following score",
                             n_true:str="actual"
                             ):
+        """
+
+        :param proportion_positive:
+        :param scaling:
+        :param title:
+        :param xlabel:
+        :param ylabel:
+        :param expected_random:
+        :param expected_score:
+        :param n_true:
+        :return:
+        """
+        ## TODO: docstring
         df = self.optimize_expected_value(proportion_positive=proportion_positive,
                                           scaling=scaling)
 
