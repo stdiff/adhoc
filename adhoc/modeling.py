@@ -78,13 +78,27 @@ def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
     :param kwarg: arguments for GridSearchCV
     :return: GridSearchCV instance
     """
+    import sklearn
+
     if scaler is None:
         scaler = MinMaxScaler()
 
     pipeline = Pipeline([("scaler", scaler),  (name, model)])
     param_grid = add_prefix_to_param(name, param_grid)
-    model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
-                         return_train_score=return_train_score, **kwarg)
+
+    ## TODO: We remove this if-statement in future.
+    if sklearn.__version__ > "0.24":
+        ## new version does not have the parameter iid
+        model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
+                             return_train_score=return_train_score, **kwarg)
+    elif kwarg.get("iid") is not None:
+        ## if it is explicitly given
+        model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
+                             return_train_score=return_train_score, **kwarg)
+    else:
+        ## if nothing is given
+        model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
+                             return_train_score=return_train_score, iid=False, **kwarg)
     return model
 
 
@@ -349,7 +363,7 @@ class ROCCurve:
         """
         y_pred = self.predict_thru_threshold(threshold)
 
-        s = pd.Series(name="performance")
+        s = pd.Series(name="performance", dtype=np.float)
         s["threshold"] = threshold
         s["recall"] = recall_score(self.y_true, y_pred)
         s["precision"] = precision_score(self.y_true, y_pred)

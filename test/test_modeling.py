@@ -75,7 +75,7 @@ class ModelingTest(TestCase):
 
         cls.breast_cancer_plr = GridSearchCV(
             LogisticRegression(solver="liblinear"),
-            param_grid={"C":[0.1,1]}, cv=3, iid=False)
+            param_grid={"C":[0.1,1]}, cv=3)
         cls.breast_cancer_plr.fit(cls.breast_cancer_X, cls.breast_cancer_y)
 
 
@@ -107,8 +107,7 @@ class ModelingTest(TestCase):
                                    model=plr,
                                    param_grid=param_grid,
                                    scaler=MinMaxScaler(),
-                                   cv=cv,
-                                   iid=False)
+                                   cv=cv)
         pipeline = model.estimator
 
         self.assertTrue(isinstance(model,GridSearchCV))
@@ -158,7 +157,7 @@ class ModelingTest(TestCase):
             name="plr",
             model=LogisticRegression(solver="liblinear",
                                      multi_class="auto"),
-            param_grid={"C":[0.1,1]}, cv=3, iid=False)
+            param_grid={"C":[0.1,1]}, cv=3)
         model1.fit(self.iris_X,self.iris_y)
         estimator1 = pick_the_last_estimator(model1)
 
