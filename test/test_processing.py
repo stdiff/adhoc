@@ -13,9 +13,7 @@ import pandas as pd
 
 from adhoc.processing import file_info
 from adhoc.processing import Inspector, VariableType, MultiConverter
-from adhoc.utilities import fetch_adult_dataset
-
-#test_data = Path("data/adult.csv")
+from adhoc.utilities import fetch_adult_dataset, load_iris
 
 class ProcessingTest(TestCase):
     test_data = None
@@ -201,6 +199,28 @@ class ProcessingTest(TestCase):
             df_pval.loc["education-num", "test"],
             "chi-square test"
         )
+
+    def test_visualize_two_fields(self):
+        # check if the function works without any error
+        np.random.seed(1)
+        df = load_iris(target="species")
+        df["cat"] = np.random.choice(["a","b","c"],
+                                     size=df.shape[0],
+                                     replace=True)
+        inspector = Inspector(df)
+
+        ## continuous x continuous
+        inspector.visualize_two_fields("sepal_width","sepal_length")
+
+        ## continuous x categorical
+        inspector.visualize_two_fields("sepal_length", "species")
+
+        ## categorical x continuous
+        inspector.visualize_two_fields("species", "petal_width")
+
+        ## categorical x categorical
+        inspector.visualize_two_fields("species","cat")
+
 
 class TestMultiConverter(TestCase):
     def test_multi_converter(self):

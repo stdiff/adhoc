@@ -449,8 +449,6 @@ class Inspector:
 
         plt.xticks(rotation=rotation)
         plt.title(title)
-        plt.show()
-
 
 
 class MultiConverter(BaseEstimator, TransformerMixin):
