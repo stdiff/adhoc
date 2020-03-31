@@ -1,6 +1,7 @@
 # adhoc
 
-Build Status (master): [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=master)](https://travis-ci.org/stdiff/adhoc)
+- Build Status (master): [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=master)](https://travis-ci.org/stdiff/adhoc)
+- Code Coverage (dev): [![codecov](https://codecov.io/gh/stdiff/adhoc/branch/dev/graph/badge.svg)](https://codecov.io/gh/stdiff/adhoc)
 
 ## Goal of this repository/library 
 

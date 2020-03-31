@@ -45,6 +45,9 @@ class ProcessingTest(TestCase):
 
         inspector = Inspector(df, m_cats=20)
 
+        ## attribute check
+        self.assertEqual(20, inspector.m_cats)
+
         self.assertEqual(
             inspector.result.loc["education-num", "variable"],
             VariableType.categorical.name
