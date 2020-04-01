@@ -1,6 +1,11 @@
 # adhoc
 
-Build Status (master): [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=master)](https://travis-ci.org/stdiff/adhoc)
+- Build Status:
+  [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=master)](https://travis-ci.org/stdiff/adhoc) (master)
+  [![Build Status](https://travis-ci.org/stdiff/adhoc.svg?branch=dev)](https://travis-ci.org/stdiff/adhoc) (dev)
+- Code Coverage:
+  [![codecov](https://codecov.io/gh/stdiff/adhoc/branch/master/graph/badge.svg)](https://codecov.io/gh/stdiff/adhoc) (master)
+  [![codecov](https://codecov.io/gh/stdiff/adhoc/branch/dev/graph/badge.svg)](https://codecov.io/gh/stdiff/adhoc) (dev)
 
 ## Goal of this repository/library 
 
@@ -28,6 +33,8 @@ almost everywhere and documentation about
 
 ## Setup: Python
 
+Supported Python version: `3.7`
+
 If you want to use `virtualenv`, you can create a new environment
 by the following command
 
@@ -41,7 +48,7 @@ the environment. You can activate the environment by
 If you want to use [Anaconda](https://www.anaconda.com/), 
 you can create a new conda envrionment by the following command.
 
-    > conda create -n your_env python=3.5
+    > conda create -n your_env python=3.7
     
 You can activate the environment by 
 
@@ -88,16 +95,16 @@ Write the following two lines in a cell and let it run.
 
 #### Install "adhoc"
 
-    pip install https://github.com/stdiff/adhoc/archive/v0.3.zip
+    pip install https://github.com/stdiff/adhoc/archive/v0.4.zip
     
 Note that this library is not registered in PyPI, therefore the line 
 
-    adhoc==0.3
+    adhoc==0.4
     
 in `requirements.txt` raises an error. To avoid this error you can put 
 the following line instead of the above line 
 
-    git+git://github.com/stdiff/adhoc.git@v0.3#egg=adhoc
+    git+git://github.com/stdiff/adhoc.git@v0.4#egg=adhoc
 
 
 ## Setup: JupyterLab
@@ -147,6 +154,7 @@ NB. This might not wort because of
 ### matplotlib
 
 - [list of cmap strings](https://matplotlib.org/examples/color/colormaps_reference.html)
+- [List of named colors](https://matplotlib.org/3.1.0/gallery/color/named_colors.html)
 
 
 ### seaborn 

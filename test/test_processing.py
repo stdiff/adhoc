@@ -1,14 +1,19 @@
+"""
+unittest for adhoc/processing.py
+"""
+
 from unittest import TestCase
+
 from pathlib import Path
+from datetime import datetime, timedelta, date
+from pytz import utc
 
 import numpy as np
 import pandas as pd
 
 from adhoc.processing import file_info
 from adhoc.processing import Inspector, VariableType, MultiConverter
-from adhoc.utilities import fetch_adult_dataset
-
-#test_data = Path("data/adult.csv")
+from adhoc.utilities import fetch_adult_dataset, load_iris
 
 class ProcessingTest(TestCase):
     test_data = None
@@ -39,6 +44,9 @@ class ProcessingTest(TestCase):
         df = pd.read_csv(self.test_data)
 
         inspector = Inspector(df, m_cats=20)
+
+        ## attribute check
+        self.assertEqual(20, inspector.m_cats)
 
         self.assertEqual(
             inspector.result.loc["education-num", "variable"],
@@ -132,6 +140,34 @@ class ProcessingTest(TestCase):
             (len(inspector.get_cons()), 8)
         )
 
+    def test_distribution_timestamps(self):
+        base_dt = datetime(year=2019, month=4, day=1, tzinfo=utc)
+
+        df = pd.DataFrame({
+            "col1": [base_dt + timedelta(days=d) for d in range(-2,3)],
+            "col2": [base_dt + timedelta(hours=3*h) for h in range(-2,3)],
+            "dummy": list(range(-2,3))
+        })
+
+        df_stats = Inspector(df).distribution_timestamps()
+        self.assertEqual(2, df_stats.shape[0])
+        self.assertEqual(base_dt, df_stats.loc["col1", "mean"])
+        self.assertEqual(base_dt, df_stats.loc["col2", "mean"])
+        self.assertIsInstance(df_stats.loc["col1","std"], timedelta)
+
+
+    def test_distribution_timestamps_dates(self):
+        base_date = date(year=2019, month=4, day=1)
+        data_dates = [base_date + timedelta(days=d) for d in range(6)]
+        data_dates[0] = np.nan
+        df = pd.DataFrame({"col": data_dates})
+        df_stats = Inspector(df).distribution_timestamps(fields=["col"])
+
+        self.assertEqual(1, df_stats.shape[0])
+        self.assertEqual(5, df_stats.loc["col","count"])
+        self.assertEqual(4, df_stats.loc["col","mean"].day)
+        self.assertIsInstance(df_stats.loc["col","std"], timedelta)
+
 
     def test_significance(self):
         """
@@ -166,6 +202,28 @@ class ProcessingTest(TestCase):
             df_pval.loc["education-num", "test"],
             "chi-square test"
         )
+
+    def test_visualize_two_fields(self):
+        # check if the function works without any error
+        np.random.seed(1)
+        df = load_iris(target="species")
+        df["cat"] = np.random.choice(["a","b","c"],
+                                     size=df.shape[0],
+                                     replace=True)
+        inspector = Inspector(df)
+
+        ## continuous x continuous
+        inspector.visualize_two_fields("sepal_width","sepal_length")
+
+        ## continuous x categorical
+        inspector.visualize_two_fields("sepal_length", "species")
+
+        ## categorical x continuous
+        inspector.visualize_two_fields("species", "petal_width")
+
+        ## categorical x categorical
+        inspector.visualize_two_fields("species","cat")
+
 
 class TestMultiConverter(TestCase):
     def test_multi_converter(self):

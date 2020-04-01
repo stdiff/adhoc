@@ -4,20 +4,16 @@ branches:
     - dev
 language: python
 python:
-  - "3.5"
-  - "3.6"
+  - "3.7"
 install:
   - sudo apt-get install graphviz
   - pip install -r requirements.txt
 script:
-  - coverage run -m unittest test/test_processing.py
-  - coverage run -m unittest test/test_utilities.py
-  - coverage run -m unittest test/test_modeling.py
-  - bash <(curl -s https://codecov.io/bash)
+  - pytest --cov-report term --cov=adhoc test/
+  - codecov
   - python setup.py sdist bdist_wheel
-  - pip install dist/adhoc-0.2-py3-none-any.whl
+  - pip install dist/adhoc-0.4-py3-none-any.whl
   - cd notebooks
   - python usage-processing.py
   - python usage-modeling.py
-
-
+  - python sample-diagrams.py

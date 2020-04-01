@@ -75,7 +75,7 @@ class ModelingTest(TestCase):
 
         cls.breast_cancer_plr = GridSearchCV(
             LogisticRegression(solver="liblinear"),
-            param_grid={"C":[0.1,1]}, cv=3, iid=False)
+            param_grid={"C":[0.1,1]}, cv=3)
         cls.breast_cancer_plr.fit(cls.breast_cancer_X, cls.breast_cancer_y)
 
 
@@ -107,8 +107,7 @@ class ModelingTest(TestCase):
                                    model=plr,
                                    param_grid=param_grid,
                                    scaler=MinMaxScaler(),
-                                   cv=cv,
-                                   iid=False)
+                                   cv=cv)
         pipeline = model.estimator
 
         self.assertTrue(isinstance(model,GridSearchCV))
@@ -158,7 +157,7 @@ class ModelingTest(TestCase):
             name="plr",
             model=LogisticRegression(solver="liblinear",
                                      multi_class="auto"),
-            param_grid={"C":[0.1,1]}, cv=3, iid=False)
+            param_grid={"C":[0.1,1]}, cv=3)
         model1.fit(self.iris_X,self.iris_y)
         estimator1 = pick_the_last_estimator(model1)
 
@@ -315,7 +314,8 @@ class TestROCCurve(TestCase):
         self.assertEqual(cols, list(self.roc.scores.columns))
         self.assertEqual("threshold", self.roc.scores.index.name)
 
-        ## predict_thru_threshold
+
+    def test_predict_thru_threshold(self):
         y_pred = self.roc.predict_thru_threshold(threshold=0.5)
         self.assertTrue(isinstance(y_pred,np.ndarray))
 
@@ -324,7 +324,8 @@ class TestROCCurve(TestCase):
 
         self.assertEqual(1, (y_pred == self.y_pred).mean())
 
-        ## get_scores_thru_threshold
+
+    def test_get_scores_thru_threshold(self):
         s = self.roc.get_scores_thru_threshold(0.5)
         self.assertTrue(isinstance(s,pd.Series))
 
@@ -337,11 +338,23 @@ class TestROCCurve(TestCase):
                          s["accuracy"])
         self.assertEqual(0.5, s["threshold"])
 
-        ## get_confusion_matrix
+
+    def test_get_confusion_matrix(self):
         conf = self.roc.get_confusion_matrix(threshold=0.5)
         self.assertTrue(isinstance(conf,pd.DataFrame))
 
-        ## optimize_expected_value
+
+    def test_roc_curve(self):
+        # check if it is error-free
+        self.roc.show_roc_curve()
+
+
+    def test_show_metrics(self):
+        # check if it is error-free
+        self.roc.show_metrics()
+
+
+    def test_optimize_expected_value(self):
         df_scoring = self.roc.optimize_expected_value(
             proportion_positive=self.roc.y_true.mean(),
             scaling=True)
@@ -363,3 +376,9 @@ class TestROCCurve(TestCase):
                                last_row["expected (random)"])
 
         self.assertEqual(self.roc.y_true.sum(), last_row["n_true"])
+
+        ## check if it is error-free
+        self.roc.show_expected_value(
+            proportion_positive=self.roc.y_true.mean(),
+            scaling=True
+        )
