@@ -28,15 +28,15 @@ pip install https://github.com/stdiff/adhoc/archive/v0.4.zip
 
 echo "-- Install jupyter lab and jupytext"
 pip install jupyter==1.0.0
-pip install jupyterlab==1.2.6
-pip install jupytext==0.8.6
+pip install jupyterlab==2.1.4
+pip install jupytext==1.5.0
 
 echo "-- Install jupyterlab_spellchecker"
 jupyter labextension install @ijmbarr/jupyterlab_spellchecker
 
 echo "-- Install jupyterlab_templates"
-pip install jupyterlab_templates==0.2.3
-jupyter labextension install jupyterlab_templates
+pip install jupyterlab_templates==0.2.4
+jupyter labextension install jupyterlab_templates@0.2.4
 jupyter serverextension enable --py jupyterlab_templates
 
 #echo "-- Install jupyterlab-emacskeys"
@@ -45,7 +45,7 @@ jupyter serverextension enable --py jupyterlab_templates
 echo "-- Install further libraries"
 pip install watermark==2.0.2
 pip install click==7.1.2
-pip install scikit-image==0.16.2 pillow==6.2.2
+##pip install scikit-image==0.16.2 pillow==6.2.2
 
 echo "-- create requirements.txt"
 pip freeze > requirements.txt
