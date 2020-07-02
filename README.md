@@ -45,15 +45,6 @@ the environment. You can activate the environment by
 
     > source your_env/bin/activate
 
-If you want to use [Anaconda](https://www.anaconda.com/), 
-you can create a new conda envrionment by the following command.
-
-    > conda create -n your_env python=3.7
-    
-You can activate the environment by 
-
-    > conda activate your_env
-
     
 ### Libraries 
      
@@ -66,10 +57,6 @@ the list of installed libraries by
 
     (your_env) > pip freeze > requirements.txt
     
-or
-
-    (your_env) > conda env export > conda.yaml
-
 
 #### jupytext
 
