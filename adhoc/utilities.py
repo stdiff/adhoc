@@ -431,7 +431,7 @@ def to_excel(df:pd.DataFrame, file:Union[str,Path], sheet:str="Sheet",
     ## https://openpyxl.readthedocs.io/en/stable/worksheet_tables.html
     last_cell = "%s%s" % (ws.cell(row=df.shape[0]+1, column=df.shape[1]).column_letter,
                           df.shape[0]+1)
-    tab = Table(displayName="Table1", ref="A1:%s" % last_cell)
+    tab = Table(displayName=sheet, ref="A1:%s" % last_cell)
     style = TableStyleInfo(name=style, showFirstColumn=False, showLastColumn=False,
                            showRowStripes=True, showColumnStripes=False)
     tab.tableStyleInfo = style

@@ -211,6 +211,7 @@ class TestUtilities(TestCase):
             self.assertEqual(df_boston.shape, dg2.shape)
 
             ## Case 3) Overwrite an existing sheet with a new table
+            ## This table has no style.
             to_excel(df=df_cancer, file=excel_file, sheet=sheets[0], libreoffice=False)
 
             wb3 = load_workbook(str(excel_file))
@@ -219,3 +220,7 @@ class TestUtilities(TestCase):
             dg3 = pd.read_excel(excel_file, sheet_name=sheets[0])
             self.assertEqual(df_cancer.columns.tolist(), dg3.columns.tolist())
             self.assertEqual(df_cancer.shape, dg3.shape)
+
+            # If you want to see the result
+            #from shutil import copy
+            #copy(str(excel_file), "/tmp/test_to_excel.xlsx")
