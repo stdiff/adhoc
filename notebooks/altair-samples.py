@@ -47,7 +47,8 @@ def adhoc_theme():
                    "axisRight" : {"labelFontSize":14, "titleFontSize":16},
                    "header"    : {"labelFontSize":14, "titleFontSize":16, "titleAlign":"left"},
                    "axisBottom": {"labelFontSize":14, "titleFontSize":16},
-                   "legend"    : {"labelFontSize":12, "titleFontSize":14}
+                   "legend"    : {"labelFontSize":12, "titleFontSize":14},
+                   "range"     : {"category": {"scheme": "category10"}}
     }}
     return theme_dict
 
