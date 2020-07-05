@@ -17,3 +17,4 @@ coverage==5.1
 pytest==5.4.3
 codecov==2.1.7
 pytest-cov==2.10.0
+altair==4.1.0
