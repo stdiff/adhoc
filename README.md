@@ -153,4 +153,8 @@ NB. This might not wort because of
 
 - [scoring parameter](https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter)
 
+### Altair
 
+- [Official Documentation](https://altair-viz.github.io/)
+- [Top-Level Chart Configuration](https://altair-viz.github.io/user_guide/configuration.html)
+- [Color Schemes](https://vega.github.io/vega/docs/schemes/)
