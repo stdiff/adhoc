@@ -19,7 +19,8 @@ setup(
                         "pydot>=1.4.1",
                         "graphviz>=0.13.2",
                         "openpyxl>=3.0.3",
-                        "xlrd>=1.2.0"
+                        "xlrd>=1.2.0",
+                        "altair>=4.1.0"
                         ],
     zip_safe=False
 )
