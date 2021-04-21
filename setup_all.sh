@@ -42,8 +42,13 @@ jupyter serverextension enable --py jupyterlab_templates
 #echo "-- Install jupyterlab-emacskeys"
 #jupyter labextension install jupyterlab-emacskeys
 
+echo "-- Install jupyterlab-git"
+pip install jupyterlab-git
+jupyter lab build
+
 echo "-- Install further libraries"
 pip install watermark==2.0.2
+pip install altair==4.1.0
 pip install click==7.1.2
 ##pip install scikit-image==0.16.2 pillow==6.2.2
 
