@@ -1,8 +1,4 @@
-md5: c1ab17f632262222de85befe26fe3fcb
 outs:
-- cache: true
-  md5: 3780e2797d26de93f5633d9bfed79da7
-  metric: false
+- md5: 3780e2797d26de93f5633d9bfed79da7
   path: adult.csv
-  persist: false
-wdir: .
+  size: 3514343
