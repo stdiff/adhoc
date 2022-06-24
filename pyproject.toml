@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "ad_hoc"
+version = "0.4"
+description = "Helper package for starting an ad hoc analysis quickly"
+authors = ["Hironori Sakai <crescent.lab@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.10"
+pandas = "1.4.3"
+numpy = "1.23.0"
+scikit-learn = "1.1.1"
+scipy = "1.8.1"
+matplotlib = "^3.5.2" ## will be replaced with Altair
+seaborn = "^0.11.2" ## will be replaced with Altair
+black = "22.3.0"
+isort = "5.10.1"
+jupyterlab = "3.2.9"
+jupyterlab-code-formatter = "1.4.11"
+jupytext = "1.13.8"
+jupyterlab-spellchecker = "0.7.2"
+jupyterlab-templates = "0.3.1"
+watermark = "2.3.1"
+pytest = "7.1.2"
+
+[tool.poetry.dev-dependencies]
+## libraries for checking compatibilities with this libarary
+altair = "4.2.0" ## jsonschema? check if transform_fold works properly
+
+
+[tool.black]
+line-length = 120
+target-version = ["py39"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
