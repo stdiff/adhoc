@@ -1,14 +1,14 @@
 from setuptools import setup
 
 setup(
-    name="adhoc",
+    name="ad_hoc",
     version="0.4",
     description="Module for ad hoc analysis",
     url="https://github.com/stdiff/adhoc",
     author="Hironori Sakai",
     author_email="crescent.lab@gmail.com",
     license="MIT",
-    packages=["adhoc"],
+    packages=["ad_hoc"],
     python_requires=">=3.7",
     install_requires = ["numpy>=1.18.0",
                         "pandas>=1.0.0",

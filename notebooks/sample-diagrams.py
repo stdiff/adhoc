@@ -31,15 +31,15 @@ rcParams['figure.figsize'] = 14, 6
 # -
 
 try:
-    from adhoc.processing import Inspector
-    from adhoc.modeling import show_tree
-    from adhoc.utilities import load_iris, facet_grid_scatter_plot, bins_heatmap
+    from ad_hoc.processing import Inspector
+    from ad_hoc.modeling import show_tree
+    from ad_hoc.utilities import load_iris, facet_grid_scatter_plot, bins_heatmap
 except ImportError:
     import sys
     sys.path.append("..")
-    from adhoc.processing import Inspector
-    from adhoc.modeling import show_tree
-    from adhoc.utilities import load_iris, facet_grid_scatter_plot, bins_heatmap
+    from ad_hoc.processing import Inspector
+    from ad_hoc.modeling import show_tree
+    from ad_hoc.utilities import load_iris, facet_grid_scatter_plot, bins_heatmap
 
 # +
 np.random.seed(1)

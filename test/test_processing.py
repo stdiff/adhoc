@@ -1,5 +1,5 @@
 """
-unittest for adhoc/processing.py
+unittest for ad_hoc/processing.py
 """
 
 from unittest import TestCase
@@ -11,9 +11,9 @@ from pytz import utc
 import numpy as np
 import pandas as pd
 
-from adhoc.processing import file_info
-from adhoc.processing import Inspector, VariableType, MultiConverter
-from adhoc.utilities import fetch_adult_dataset, load_iris
+from ad_hoc.processing import file_info
+from ad_hoc.processing import Inspector, VariableType, MultiConverter
+from ad_hoc.utilities import fetch_adult_dataset, load_iris
 
 class ProcessingTest(TestCase):
     test_data = None

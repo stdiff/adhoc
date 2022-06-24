@@ -78,18 +78,18 @@ y_train.value_counts()
 #
 # A preprocessing algorithm (rescaling, PCA, etc.) is often applied to the training dataset and then CV is applied to the the preprocessed data set. This should be avoided, because the training preprocessing involves some information from the validation data. As a result the training preprocessing can cause "overfitting". `Pipeline` solves this problem.
 #
-# Because of the same reason we should actually integrate `adhoc.preprocessing.MultiConverter` to `Pipeline`. Namely `MultiConverter` fills missing values by some statistics ("mean", "median" and "most frequent class"). But such statistics are hardly ever overfitted if we have enough data, and it is more important that the column names are fixed. 
+# Because of the same reason we should actually integrate `ad_hoc.preprocessing.MultiConverter` to `Pipeline`. Namely `MultiConverter` fills missing values by some statistics ("mean", "median" and "most frequent class"). But such statistics are hardly ever overfitted if we have enough data, and it is more important that the column names are fixed.
 #
 # Imagine you drop the dummy variable "White" in the first CV and "Other" in the second CV because the majority class can change. Namely your feature matrices can have different features. This is very confusing. Therefore we apply `MultiConverter` before CV.
 #
 # If you specify all dropping values manually, then you can integrate your `MultiConverter` instance in `Pipeline` without any problem.
 
 try:
-    from adhoc.modeling import grid_params, simple_pipeline_cv
+    from ad_hoc.modeling import grid_params, simple_pipeline_cv
 except ImportError:
     import sys
     sys.path.append("..")
-    from adhoc.modeling import grid_params, simple_pipeline_cv
+    from ad_hoc.modeling import grid_params, simple_pipeline_cv
 
 # Let us try to train a model and pick the best hyperparameters. `grid_params` is a dict of simple `grid_param` for several models. You can use it for a simple analysis.
 #
@@ -112,7 +112,7 @@ pd.DataFrame(plr.cv_results_)
 # We can compute the confident interval of the cross-validation scores with `cv_results_summary`.
 
 # +
-from adhoc.modeling import cv_results_summary
+from ad_hoc.modeling import cv_results_summary
 
 cv_results_summary(plr)
 # -
@@ -122,7 +122,7 @@ cv_results_summary(plr)
 # If you have a Pipeline with a scaler, then the regression coefficients are the coefficients after the scaler. Therefore you can use the absolute values of regression coefficients as "feature importance" (depending on your whole pipeline). But on the other hand you can not interpret the coefficients in the original scales.
 
 # +
-from adhoc.modeling import show_coefficients
+from ad_hoc.modeling import show_coefficients
 
 show_coefficients(plr, X_train.columns).sort_values(by=1.0, ascending=False)
 
@@ -139,14 +139,14 @@ cv_results_summary(tree)
 # A simple wrapper function for `sklearn.tree.export_graphviz` is available: 
 
 # +
-from adhoc.modeling import show_tree
+from ad_hoc.modeling import show_tree
 
 show_tree(tree, X_train.columns)
 # -
 # Here is the feature importance of the decision tree.
 
 # +
-from adhoc.modeling import show_feature_importance
+from ad_hoc.modeling import show_feature_importance
 
 s_fi_tree = show_feature_importance(tree, X_train.columns)
 s_fi_tree[s_fi_tree > 0]
@@ -187,10 +187,10 @@ s_fi_xgb[s_fi_xgb>0.01]
 # - education_Masters
 # - hours-per-week
 #
-# Namely we create a categorical variables `marital-status` and `education`. In other words, we apply something like `LebelBinarizer.inverse_transform` with limited values. `adhoc.modeling.recover_label` does the job.
+# Namely we create a categorical variables `marital-status` and `education`. In other words, we apply something like `LebelBinarizer.inverse_transform` with limited values. `ad_hoc.modeling.recover_label` does the job.
 
 # +
-from adhoc.modeling import recover_label
+from ad_hoc.modeling import recover_label
 
 field2columns = {"marital-status": ["marital-status_Never-married", "marital-status_Divorced"],
                  "education": ["education_Bachelors", "education_Masters"]}
@@ -204,7 +204,7 @@ df_train["pred"] = tree.predict(X_train)
 df_train[target] = y_train
 # -
 
-# `adhoc.modeling.recover_label` create a column `marital-status` out of two columns `marital-status_Never-married` and `marital-status_Divorced`. The rule is as follows:
+# `ad_hoc.modeling.recover_label` create a column `marital-status` out of two columns `marital-status_Never-married` and `marital-status_Divorced`. The rule is as follows:
 #
 # - `marital-status` is `Never_married` if `marital-status_Never-married == 1`
 # - `marital-status` is `Divorced` if `marital-status_Divorced == 1` 
@@ -224,7 +224,7 @@ df_train[cols].drop_duplicates()
 # The following scatter plot shows the predictions of the decision tree on the training set. The color shows the predicted probabilities: The red points are predicted as positive and the blue points are predicted as negative.
 
 # +
-from adhoc.utilities import facet_grid_scatter_plot
+from ad_hoc.utilities import facet_grid_scatter_plot
 
 facet_grid_scatter_plot(data=df_train, col="marital-status", row="education", 
                         x="capital-gain", y="hours-per-week", c="prob", 
@@ -236,7 +236,7 @@ facet_grid_scatter_plot(data=df_train, col="marital-status", row="education",
 # Each of the following heat maps corresponds to a pair of values of `marital-status` and `education`. Note that the bins are different according to heat maps. The choice of bins are optimized by decision trees. The bins without any color/any number has no instances.
 
 # +
-from adhoc.utilities import bins_heatmap
+from ad_hoc.utilities import bins_heatmap
 
 bins_heatmap(df_train, cat1="marital-status", cat2="education", x="capital-gain", y="hours-per-week",
              target="prob", center=0.5, cmap="RdBu_r", fontsize=14)
@@ -268,7 +268,7 @@ bins_heatmap(df_train, cat1="marital-status", cat2="education", x="capital-gain"
 # One of the difficulties of this challenge is that the accuracy of the model is not a right metric. Let us look at the performance of the random forest classifier (on the training set).
 
 # +
-from adhoc.modeling import ROCCurve
+from ad_hoc.modeling import ROCCurve
 
 def performance_check(model, X:pd.DataFrame, y:pd.Series, threshold:float=0.5) -> pd.DataFrame:
     roc_curve = ROCCurve(y,model.predict_proba(X)[:,1])

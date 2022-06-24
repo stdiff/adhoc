@@ -59,11 +59,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 try:
-    from adhoc.utilities import fetch_adult_dataset
+    from ad_hoc.utilities import fetch_adult_dataset
 except ImportError:
     import sys
     sys.path.append("..")
-    from adhoc.utilities import fetch_adult_dataset
+    from ad_hoc.utilities import fetch_adult_dataset
 
 # As a sample dataset we use [Adult dataset](http://archive.ics.uci.edu/ml/datasets/Adult). You should consult the linked page for a brief explanation about the fields. The following code downloads the data file and stores it as `../data/adult.csv` (if you have not downloaded it).
 
@@ -93,7 +93,7 @@ df.head()
 # Creating an instance of `Inspector`, you can get an overview of the data quality of your dataset.
 
 # +
-from adhoc.processing import Inspector
+from ad_hoc.processing import Inspector
 
 inspector = Inspector(df, m_cats=20)
 inspector
@@ -411,7 +411,7 @@ s_coef
 # Class `MultiConverter` does the two steps at the same time. 
 
 # +
-from adhoc.processing import MultiConverter
+from ad_hoc.processing import MultiConverter
 
 cats = inspector.get_cats() ## variables for which LabelBinarizer is applied.
 strategy = {cat:"most_frequent" for cat in cats} ## 

@@ -1,5 +1,5 @@
 """
-unittest for adhoc/utilities.py
+unittest for ad_hoc/utilities.py
 """
 
 from unittest import TestCase
@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets
 
-from adhoc.utilities import bunch2dataframe, fetch_adult_dataset
-from adhoc.utilities import load_iris, load_boston, load_breast_cancer, load_diabetes
-from adhoc.utilities import grep_data, bins_by_tree
-from adhoc.utilities import facet_grid_scatter_plot, bins_heatmap
+from ad_hoc.utilities import bunch2dataframe, fetch_adult_dataset
+from ad_hoc.utilities import load_iris, load_boston, load_breast_cancer, load_diabetes
+from ad_hoc.utilities import grep_data, bins_by_tree
+from ad_hoc.utilities import facet_grid_scatter_plot, bins_heatmap
 
 import warnings
 warnings.filterwarnings("ignore")

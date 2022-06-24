@@ -1,5 +1,5 @@
 """
-unittest for adhoc/modeling.py
+unittest for ad_hoc/modeling.py
 """
 
 from unittest import TestCase
@@ -12,11 +12,11 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 
-from adhoc.modeling import add_prefix_to_param, simple_pipeline_cv
-from adhoc.modeling import cv_results_summary, pick_the_last_estimator
-from adhoc.modeling import show_coefficients, show_feature_importance
-from adhoc.modeling import recover_label, ROCCurve
-from adhoc.utilities import load_boston, load_iris, load_breast_cancer
+from ad_hoc.modeling import add_prefix_to_param, simple_pipeline_cv
+from ad_hoc.modeling import cv_results_summary, pick_the_last_estimator
+from ad_hoc.modeling import show_coefficients, show_feature_importance
+from ad_hoc.modeling import recover_label, ROCCurve
+from ad_hoc.utilities import load_boston, load_iris, load_breast_cancer
 
 class ModelingTest(TestCase):
     iris_X = None
