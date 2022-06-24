@@ -12,9 +12,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import GridSearchCV
 
-## for show_tree
-from io import StringIO
-from sklearn.tree import export_graphviz
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from IPython.display import Image
 

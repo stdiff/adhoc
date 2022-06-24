@@ -2,12 +2,9 @@
 Helper functions
 """
 
-from typing import Union
 from collections import OrderedDict
 from itertools import product
 from pathlib import Path
-import tempfile
-import shutil
 import re
 
 import numpy as np
