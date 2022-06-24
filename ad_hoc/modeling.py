@@ -27,30 +27,15 @@ import matplotlib.pyplot as plt
 ## Hyperparameters for GridSearchCV
 ## Keep them simple. They are only for first simple analysis.
 grid_params = {
-    "ElasticNet": {
-        "alpha": [0.01, 0.1, 1.0],
-        "l1_ratio": [0.1, 0.3, 0.7, 0.9]
-    },
-    "LogisticRegression": {
-        "C": [0.1, 1.0, 10],
-        "l1_ratio": [0.1, 0.5, 0.9]
-    },
-    "DecisionTree": {
-        'max_leaf_nodes': [3, 6, 12, 24]
-    },
-    "RandomForest": {
-        'n_estimators': [10, 30, 50],
-        'max_depth': [3, 5]
-    },
-    "XGB": {
-        'learning_rate': [0.01, 0.1],
-        'n_estimators': [5, 10, 20],
-        'max_depth': [5, 10]}
+    "ElasticNet": {"alpha": [0.01, 0.1, 1.0], "l1_ratio": [0.1, 0.3, 0.7, 0.9]},
+    "LogisticRegression": {"C": [0.1, 1.0, 10], "l1_ratio": [0.1, 0.5, 0.9]},
+    "DecisionTree": {"max_leaf_nodes": [3, 6, 12, 24]},
+    "RandomForest": {"n_estimators": [10, 30, 50], "max_depth": [3, 5]},
+    "XGB": {"learning_rate": [0.01, 0.1], "n_estimators": [5, 10, 20], "max_depth": [5, 10]},
 }
 
 
-
-def add_prefix_to_param(prefix:str, param_grid:dict) -> Dict[str,list]:
+def add_prefix_to_param(prefix: str, param_grid: dict) -> Dict[str, list]:
     """
     Create a param_grid for Pipeline from an "ordinary" param_grid.
 
@@ -58,12 +43,19 @@ def add_prefix_to_param(prefix:str, param_grid:dict) -> Dict[str,list]:
     :param param_grid: ordinary grid_param
     :return: modified dict
     """
-    return { "%s__%s" % (prefix,k): v for k,v in param_grid.items()}
+    return {"%s__%s" % (prefix, k): v for k, v in param_grid.items()}
 
 
-def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
-                       cv:int=5, scoring:Any="accuracy", scaler:BaseEstimator=None,
-                       return_train_score=True, **kwarg) -> GridSearchCV:
+def simple_pipeline_cv(
+    name: str,
+    model: BaseEstimator,
+    param_grid: Dict[str, list],
+    cv: int = 5,
+    scoring: Any = "accuracy",
+    scaler: BaseEstimator = None,
+    return_train_score=True,
+    **kwarg,
+) -> GridSearchCV:
     """
     Create a pipeline with only one scaler and an estimator
 
@@ -82,26 +74,36 @@ def simple_pipeline_cv(name:str, model:BaseEstimator, param_grid:Dict[str,list],
     if scaler is None:
         scaler = MinMaxScaler()
 
-    pipeline = Pipeline([("scaler", scaler),  (name, model)])
+    pipeline = Pipeline([("scaler", scaler), (name, model)])
     param_grid = add_prefix_to_param(name, param_grid)
 
     ## TODO: We remove this if-statement in future.
     if sklearn.__version__ > "0.24":
         ## new version does not have the parameter iid
-        model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
-                             return_train_score=return_train_score, **kwarg)
+        model = GridSearchCV(
+            pipeline, param_grid, cv=cv, scoring=scoring, refit=True, return_train_score=return_train_score, **kwarg
+        )
     elif kwarg.get("iid") is not None:
         ## if it is explicitly given
-        model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
-                             return_train_score=return_train_score, **kwarg)
+        model = GridSearchCV(
+            pipeline, param_grid, cv=cv, scoring=scoring, refit=True, return_train_score=return_train_score, **kwarg
+        )
     else:
         ## if nothing is given
-        model = GridSearchCV(pipeline, param_grid, cv=cv, scoring=scoring, refit=True,
-                             return_train_score=return_train_score, iid=False, **kwarg)
+        model = GridSearchCV(
+            pipeline,
+            param_grid,
+            cv=cv,
+            scoring=scoring,
+            refit=True,
+            return_train_score=return_train_score,
+            iid=False,
+            **kwarg,
+        )
     return model
 
 
-def cv_results_summary(grid:GridSearchCV, alpha:float=0.05) -> pd.DataFrame:
+def cv_results_summary(grid: GridSearchCV, alpha: float = 0.05) -> pd.DataFrame:
     """
     Make the result of CV more smaller and add confidence interval of
     cross-validation scores.
@@ -117,16 +119,15 @@ def cv_results_summary(grid:GridSearchCV, alpha:float=0.05) -> pd.DataFrame:
 
     df = pd.DataFrame(grid.cv_results_)
 
-    n_fold = grid.cv ## number of folds in CV
-    delta = df["std_test_score"]*stats.t.ppf(1-alpha/2, n_fold-1)/np.sqrt(n_fold)
+    n_fold = grid.cv  ## number of folds in CV
+    delta = df["std_test_score"] * stats.t.ppf(1 - alpha / 2, n_fold - 1) / np.sqrt(n_fold)
     df["test_CI_low"] = df["mean_test_score"] - delta
     df["test_CI_high"] = df["mean_test_score"] + delta
 
     ## select columns
     param_list = [k for k in grid.cv_results_.keys() if k.startswith("param_")]
 
-    cols = ["rank_test_score", "mean_test_score", "std_test_score",
-        "test_CI_low", "test_CI_high"]
+    cols = ["rank_test_score", "mean_test_score", "std_test_score", "test_CI_low", "test_CI_high"]
 
     if grid.return_train_score:
         cols.append("mean_train_score")
@@ -139,7 +140,7 @@ def cv_results_summary(grid:GridSearchCV, alpha:float=0.05) -> pd.DataFrame:
     return df.sort_index()
 
 
-def pick_the_last_estimator(grid:GridSearchCV) -> BaseEstimator:
+def pick_the_last_estimator(grid: GridSearchCV) -> BaseEstimator:
     """
     Pick the "last" component of the Pipeline instance in the given GridSearchCV instance.
     If the estimator of the GridSearchCV is not a Pipeline, then we give the estimator.
@@ -154,7 +155,7 @@ def pick_the_last_estimator(grid:GridSearchCV) -> BaseEstimator:
         return grid.best_estimator_
 
 
-def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
+def show_coefficients(grid: GridSearchCV, columns: List[str]) -> pd.DataFrame:
     """
     show the regression coefficients of the trained model.
 
@@ -176,7 +177,7 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
     if not hasattr(model, "coef_") or not hasattr(model, "intercept_"):
         raise Exception("You probably have no linear model")
 
-    if hasattr(model,"classes_"):
+    if hasattr(model, "classes_"):
         ## classification
         ## If we have a binary classifier, model.coef_ is an array of shape (1,p),
         ## but model.class_ contains two classes. Thus we need to pick the positive class
@@ -187,13 +188,14 @@ def show_coefficients(grid:GridSearchCV, columns:List[str]) -> pd.DataFrame:
 
     df_coef = pd.DataFrame(model.coef_.T, index=columns, columns=labels)
     df_intercept = pd.DataFrame([model.intercept_], index=["intercept"], columns=labels)
-    df_coef = pd.concat([df_coef,df_intercept], axis=0)
+    df_coef = pd.concat([df_coef, df_intercept], axis=0)
 
     return df_coef
 
 
-def show_tree(model:Union[DecisionTreeRegressor, DecisionTreeClassifier, GridSearchCV],
-              columns:Union[List[str],pd.Index]) -> Image:
+def show_tree(
+    model: Union[DecisionTreeRegressor, DecisionTreeClassifier, GridSearchCV], columns: Union[List[str], pd.Index]
+) -> Image:
     """
     Visualize the given trained DecisionTree model on Jupyter.
     This function requires also pydot.
@@ -204,8 +206,8 @@ def show_tree(model:Union[DecisionTreeRegressor, DecisionTreeClassifier, GridSea
     """
     raise NotImplementedError("Implement without pydot")
 
-def show_feature_importance(estimator:BaseEstimator,
-                            columns:Union[List[str],pd.Index]) -> pd.Series:
+
+def show_feature_importance(estimator: BaseEstimator, columns: Union[List[str], pd.Index]) -> pd.Series:
     """
     Return the series of feature importance of given random forest model.
     XGB model and DecisionTree model can be accepted as well.
@@ -219,15 +221,16 @@ def show_feature_importance(estimator:BaseEstimator,
     else:
         model = estimator
 
-    if hasattr(model,"feature_importances_"):
+    if hasattr(model, "feature_importances_"):
         s = pd.Series(model.feature_importances_, index=columns, name="importance")
         return s.sort_values(ascending=False)
     else:
         raise AttributeError("Your model does not have an attribute 'feature_importances_'.")
 
 
-def recover_label(data:pd.DataFrame, field2columns:Dict[str,List[str]],
-                  sep:str=None, other:str="other", inplace=True) -> pd.DataFrame:
+def recover_label(
+    data: pd.DataFrame, field2columns: Dict[str, List[str]], sep: str = None, other: str = "other", inplace=True
+) -> pd.DataFrame:
     """
     Similar to LabelBinarizer.inverse_transform but without the fitted instance.
     Assume you have binary columns col1 and col2. Then this function adds a column
@@ -259,29 +262,27 @@ def recover_label(data:pd.DataFrame, field2columns:Dict[str,List[str]],
         ## sep can be an empty string: "if sep" should be avoided
         for field, columns in field2columns.items():
             for column in columns:
-                if not column.startswith(field+sep):
-                    raise ValueError("Column %s does not have %s%s as prefix" % (column,field,sep))
+                if not column.startswith(field + sep):
+                    raise ValueError("Column %s does not have %s%s as prefix" % (column, field, sep))
                 if not column in data.columns:
                     raise ValueError("Column %s can not be found in the given data." % column)
 
     for field, columns in field2columns.items():
         if sep:
-            values = [column[len(field + sep):] for column in columns]
+            values = [column[len(field + sep) :] for column in columns]
         else:
             values = columns
 
         data[field] = data[columns[0]].map({0: other, 1: values[0]})
         for column, value in zip(columns[1:], values[1:]):
-            data.loc[data[column] == 1,field] = value
+            data.loc[data[column] == 1, field] = value
 
     if not inplace:
         return data
 
 
 class ROCCurve:
-    def __init__(self, y_true:pd.Series,
-                 y_score:Union[np.ndarray,pd.Series],
-                 pos_label:Any=1):
+    def __init__(self, y_true: pd.Series, y_score: Union[np.ndarray, pd.Series], pos_label: Any = 1):
         """
         This class provides API to calculate performance metrics
         which are relevant to a binary classification.
@@ -308,19 +309,16 @@ class ROCCurve:
         self.thresholds = self.thresholds[1:]
         self._scores = None
 
-
     @property
     def auc(self) -> float:
         """The area under the ROC curve"""
         return roc_auc_score(self.y_true, self.y_score)
 
-
     @property
     def scores(self) -> pd.DataFrame:
         """DataFrame of recall, precision, FP-rate, accuracy and F1 score for each threshold"""
         if self._scores is None:
-            cols = ["threshold", "recall", "precision", "fp_rate",
-                    "accuracy", "f1_score", "n_pos_pred"]
+            cols = ["threshold", "recall", "precision", "fp_rate", "accuracy", "f1_score", "n_pos_pred"]
             rows = []
 
             ## TODO: find an efficient algorithm to calculate metrics at the same time
@@ -332,8 +330,7 @@ class ROCCurve:
 
         return self._scores
 
-
-    def predict_thru_threshold(self, threshold:float) -> np.ndarray:
+    def predict_thru_threshold(self, threshold: float) -> np.ndarray:
         """
         make a prediction by splitting scores by the given threshold
 
@@ -342,8 +339,7 @@ class ROCCurve:
         """
         return (self.y_score >= threshold).astype(int)
 
-
-    def get_scores_thru_threshold(self, threshold:float=0.5) -> pd.Series:
+    def get_scores_thru_threshold(self, threshold: float = 0.5) -> pd.Series:
         """
         compute the performance scores.
 
@@ -359,7 +355,7 @@ class ROCCurve:
         s["recall"] = recall_score(self.y_true, y_pred)
         s["precision"] = precision_score(self.y_true, y_pred)
         s["accuracy"] = np.mean(self.y_true == y_pred)
-        s["f1_score"] =  f1_score(self.y_true, y_pred)
+        s["f1_score"] = f1_score(self.y_true, y_pred)
         s["n_pos_pred"] = y_pred.sum()
 
         fp = np.logical_and(self.y_true == 0, y_pred == 1).sum()
@@ -370,8 +366,7 @@ class ROCCurve:
 
         return s
 
-
-    def get_confusion_matrix(self, threshold:float=0.5) -> pd.DataFrame:
+    def get_confusion_matrix(self, threshold: float = 0.5) -> pd.DataFrame:
         """
         returns the crosstab of the prediction and the true value
         :param threshold:
@@ -379,11 +374,7 @@ class ROCCurve:
         """
         y_pred = self.predict_thru_threshold(threshold)
 
-        return pd.crosstab(
-            pd.Series(y_pred, name="prediction"),
-            pd.Series(self.y_true, name="true value")
-        )
-
+        return pd.crosstab(pd.Series(y_pred, name="prediction"), pd.Series(self.y_true, name="true value"))
 
     def show_roc_curve(self):
         """
@@ -394,7 +385,6 @@ class ROCCurve:
         plt.title("ROC curve (AUC = %0.4f)" % self.auc)
         plt.xlabel("False-Positive Rate")
         plt.ylabel("True-Positive Rate")
-
 
     def show_metrics(self):
         """
@@ -407,10 +397,7 @@ class ROCCurve:
         self.scores[cols].plot()
         plt.title("Scores for each threshold")
 
-
-    def optimize_expected_value(self,
-                                proportion_positive:float=None,
-                                scaling:bool=True) -> pd.DataFrame:
+    def optimize_expected_value(self, proportion_positive: float = None, scaling: bool = True) -> pd.DataFrame:
         """
         Compute a table for lead prioritization. That is,
         - sort the instances in the ascending order of scores (probabilities)
@@ -430,10 +417,10 @@ class ROCCurve:
         df["score"] = self.y_score
         df.sort_values(by="score", ascending=False, inplace=True)
         df.reset_index(inplace=True)
-        df.index = pd.Index(np.arange(1,df.shape[0]+1), name="n_try")
+        df.index = pd.Index(np.arange(1, df.shape[0] + 1), name="n_try")
 
         if scaling:
-            scaling_coef = proportion_positive * df.shape[0]/df["score"].sum()
+            scaling_coef = proportion_positive * df.shape[0] / df["score"].sum()
             df["scaled_score"] = scaling_coef * df["score"]
             df["expected (score)"] = df["scaled_score"].cumsum()
         else:
@@ -444,17 +431,17 @@ class ROCCurve:
 
         return df
 
-
-    def show_expected_value(self,
-                            proportion_positive:float=None,
-                            scaling:bool=True,
-                            title:str="Expected value of number of positive instance",
-                            xlabel:str="Number of tries",
-                            ylabel:str="Number of positive instances",
-                            expected_random:str="random",
-                            expected_score:str="following score",
-                            n_true:str="actual"
-                            ):
+    def show_expected_value(
+        self,
+        proportion_positive: float = None,
+        scaling: bool = True,
+        title: str = "Expected value of number of positive instance",
+        xlabel: str = "Number of tries",
+        ylabel: str = "Number of positive instances",
+        expected_random: str = "random",
+        expected_score: str = "following score",
+        n_true: str = "actual",
+    ):
         """
 
         :param proportion_positive:
@@ -468,13 +455,12 @@ class ROCCurve:
         :return:
         """
         ## TODO: docstring
-        df = self.optimize_expected_value(proportion_positive=proportion_positive,
-                                          scaling=scaling)
+        df = self.optimize_expected_value(proportion_positive=proportion_positive, scaling=scaling)
 
         cols_orig = ["expected (random)", "expected (score)", "n_true"]
         cols_new = [expected_random, expected_score, n_true]
 
-        for i,val in enumerate(cols_new):
+        for i, val in enumerate(cols_new):
             if not val:
                 cols_new[i] = cols_orig[i]
 

@@ -22,7 +22,9 @@ from sklearn.preprocessing import LabelBinarizer
 from pylab import rcParams
 
 import warnings
+
 warnings.filterwarnings("ignore", category=FutureWarning)
+
 
 class NotInspectedError(Exception):
     pass
@@ -35,7 +37,7 @@ class VariableType(Enum):
     continuous = "continuous"
 
 
-def file_info(file:Union[str,Path]) -> pd.DataFrame:
+def file_info(file: Union[str, Path]) -> pd.DataFrame:
     """
     Check the basic information about the file
 
@@ -46,17 +48,17 @@ def file_info(file:Union[str,Path]) -> pd.DataFrame:
 
     data = []
     data.append(("name", file.name))
-    data.append(("size_in_MB", file.stat().st_size/(1024*1024)))
+    data.append(("size_in_MB", file.stat().st_size / (1024 * 1024)))
 
     with file.open("rb") as fo:
         md5sum = hashlib.md5(fo.read()).hexdigest()
-        data.append(("md5sum",md5sum))
+        data.append(("md5sum", md5sum))
 
-    return pd.DataFrame(data, columns=["key","value"])
+    return pd.DataFrame(data, columns=["key", "value"])
 
 
 class Inspector:
-    def __init__(self, df:pd.DataFrame, m_cats:int=20):
+    def __init__(self, df: pd.DataFrame, m_cats: int = 20):
         """
         Construct an inspection DataFrame of the given one
         Note that missing values are ignored for n_unique
@@ -64,12 +66,11 @@ class Inspector:
         :param df: DataFrame to analyze
         :param m_cats: maximum number of values of a categorical variable
         """
-        self.data = df ## Do not take a copy. A reference is better.
+        self.data = df  ## Do not take a copy. A reference is better.
         self._m_cats = m_cats
         self.result = None
         ## TODO: implementation of "string truncation of sampled values" (?)
         self.make_an_inspection()
-
 
     def make_an_inspection(self):
         self.result = pd.DataFrame(self.data.dtypes, columns=["dtype"]).astype(str)
@@ -81,8 +82,7 @@ class Inspector:
         self.result["sample_value"] = self.data.apply(self.sample_value, axis=0)
         return self
 
-
-    def detect_type(self, field:str) -> str:
+    def detect_type(self, field: str) -> str:
         """
         find the variable type by using the result of inspection
 
@@ -92,7 +92,7 @@ class Inspector:
         if self.result is None:
             raise NotInspectedError
 
-        s = self.result.loc[field,:]
+        s = self.result.loc[field, :]
 
         if s["n_unique"] <= 1:
             return VariableType.constant.name
@@ -105,13 +105,12 @@ class Inspector:
         else:
             return VariableType.continuous.name
 
-
     @property
     def m_cats(self):
         return self._m_cats
 
     @m_cats.setter
-    def m_cats(self, m_cats:int=20):
+    def m_cats(self, m_cats: int = 20):
         """
         The threshold of the categorical and continuous variables for numerical variable.
         (A variable of "object" is always categorical.)
@@ -133,8 +132,7 @@ class Inspector:
         self._m_cats = m_cats
         self.result["variable"] = [self.detect_type(c) for c in self.result.index]
 
-
-    def sample_value(self, s:pd.Series) -> Any:
+    def sample_value(self, s: pd.Series) -> Any:
         """
         return a non-missing value of the column in a random way.
         If the column has only missing values, then it will be returned.
@@ -145,12 +143,11 @@ class Inspector:
         s = s.dropna().unique()
 
         if len(s):
-            return np.random.choice(s,1)[0]
+            return np.random.choice(s, 1)[0]
         else:
             return np.nan
 
-
-    def regard_as_categorical(self, field:str):
+    def regard_as_categorical(self, field: str):
         """
         Modify of the variable type of the given field to categorical
 
@@ -172,8 +169,7 @@ class Inspector:
         else:
             raise ValueError("No such field in the data set")
 
-
-    def regard_as_continuous(self, field:str):
+    def regard_as_continuous(self, field: str):
         """
         Modify of the variable type of the given field to continuous
 
@@ -186,14 +182,11 @@ class Inspector:
         else:
             raise ValueError("No such field in the data set")
 
-
     def __repr__(self):
         return self.result.__repr__()
 
-
     def _repr_html_(self):
         return self.result._repr_html_()
-
 
     def get_cats(self) -> List[str]:
         """
@@ -206,7 +199,6 @@ class Inspector:
         df_cats = self.result.query("variable in @picked_up")
         return list(df_cats.index)
 
-
     def get_cons(self) -> List[str]:
         """
         return the list of continuous variables
@@ -217,8 +209,7 @@ class Inspector:
         df_cons = self.result.query("variable == '%s'" % VariableType.continuous.name)
         return list(df_cons.index)
 
-
-    def distribution_cats(self, fields:list=None, sort:bool=False) -> pd.DataFrame:
+    def distribution_cats(self, fields: list = None, sort: bool = False) -> pd.DataFrame:
         """
         return a DataFrame showing the distribution of a variable.
         If no fields is specified, all categorical variable are checked.
@@ -247,15 +238,14 @@ class Inspector:
 
             ## form indexes
             df_count["field"] = field
-            df_count.set_index(["field","value"], inplace=True)
-            df_count["rate"] = df_count["count"]/len(s)
+            df_count.set_index(["field", "value"], inplace=True)
+            df_count["rate"] = df_count["count"] / len(s)
 
             df_dist.append(df_count)
 
         return pd.concat(df_dist, axis=0)
 
-
-    def distribution_cons(self,fields:list=None):
+    def distribution_cons(self, fields: list = None):
         """
         return a DataFrame showing the distribution of the continuous variables.
         This is basically the same as df.describe().T
@@ -269,8 +259,7 @@ class Inspector:
 
         return self.data[fields].describe().T
 
-
-    def distribution_timestamps(self, fields:List[str]=None):
+    def distribution_timestamps(self, fields: List[str] = None):
         """
         return a DataFrame showing the distribution of the datetime variables.
         If no fields are given, use all datetime variables.
@@ -289,16 +278,15 @@ class Inspector:
 
         df_stats = []
         for ts_col in fields:
-            ts0 = self.data[ts_col].dropna().iloc[0] ## pick a base point
+            ts0 = self.data[ts_col].dropna().iloc[0]  ## pick a base point
             s_delta = self.data[ts_col] - ts0  ## shift by the base point
 
-            if not isinstance(ts0,datetime):
+            if not isinstance(ts0, datetime):
                 ## If the base point is not a datetime instance,
                 ## then we can not shift them back by the base point,
                 ## because of the data types. Therefore we convert it
                 ## in a datetime format.
-                ts0 = datetime(year=ts0.year, month=ts0.month, day=ts0.day,
-                               tzinfo=utc)
+                ts0 = datetime(year=ts0.year, month=ts0.month, day=ts0.day, tzinfo=utc)
 
             ts_stats = pd.DataFrame(s_delta.describe()).T
 
@@ -312,10 +300,8 @@ class Inspector:
 
         return pd.concat(df_stats, axis=0)
 
-
     ## Check if two variables are significantly different
-    def significance_test(self, field1:str, field2:str, method:str="spearman",
-                          verbose=True) -> pd.Series:
+    def significance_test(self, field1: str, field2: str, method: str = "spearman", verbose=True) -> pd.Series:
         """
         Execute a statistical test as follows
         - Both fields are categorical => chi-square test
@@ -338,7 +324,7 @@ class Inspector:
             contigency_table = pd.crosstab(self.data[field1], self.data[field2])
 
             if verbose and (contigency_table < 5).sum().sum() > 0:
-                print("The contigency table (%s vs %s) contains too small cell(s)." % (field1,field2))
+                print("The contigency table (%s vs %s) contains too small cell(s)." % (field1, field2))
                 print("Consult the documentation of stats.chi2_contingency")
 
             statistic, pval, dof, exp = stats.chi2_contingency(contigency_table)
@@ -374,12 +360,10 @@ class Inspector:
 
             statistic, pval = stats.kruskal(*samples)
 
-        s = pd.Series([field1, field2, test, statistic, pval],
-                      index=["field1", "field2", "test", "statistic", "pval"])
+        s = pd.Series([field1, field2, test, statistic, pval], index=["field1", "field2", "test", "statistic", "pval"])
         return s
 
-
-    def significance_test_features(self, target:str, verbose:bool=False) -> pd.DataFrame:
+    def significance_test_features(self, target: str, verbose: bool = False) -> pd.DataFrame:
         """
         Check the significance of feature variables against the target variables
 
@@ -392,9 +376,7 @@ class Inspector:
         results = [self.significance_test(field, target, verbose=verbose) for field in fields]
         return pd.concat(results, axis=1).T
 
-
-    def visualize_two_fields(self, field1:str, field2:str, heatmap:bool=False,
-                             rotation:float=0.0):
+    def visualize_two_fields(self, field1: str, field2: str, heatmap: bool = False, rotation: float = 0.0):
         """
         Draw an informative diagramm for given two fields (feature and target).
         Note that this method can accept no constant field.
@@ -408,14 +390,14 @@ class Inspector:
         cats = self.get_cats()
         cons = self.get_cons()
 
-        width, height = rcParams['figure.figsize']
+        width, height = rcParams["figure.figsize"]
         aspect = width / height
 
         if field1 in cats and field2 in cats:
             ## bar chart or heat map
             df_ctab = pd.crosstab(self.data[field1], self.data[field2])
 
-            df_ctab = df_ctab / df_ctab.sum(axis=0) ## normalise
+            df_ctab = df_ctab / df_ctab.sum(axis=0)  ## normalise
 
             if heatmap:
                 sns.heatmap(df_ctab.T, annot=True, cmap="YlGnBu")
@@ -426,22 +408,20 @@ class Inspector:
 
         elif field1 in cats and field2 in cons:
             ## violine
-            sns.violinplot(field1, field2, data=self.data,
-                           inner="quartile")
+            sns.violinplot(field1, field2, data=self.data, inner="quartile")
             title = "Distribution of %s by %s" % (field2, field1)
 
         elif field1 in cons and field2 in cats:
             ## KDE
-            sns.FacetGrid(self.data, hue=field2,
-                          height=height, aspect=aspect, legend_out=False)\
-               .map(sns.kdeplot, field1, shade=True).add_legend()
+            sns.FacetGrid(self.data, hue=field2, height=height, aspect=aspect, legend_out=False).map(
+                sns.kdeplot, field1, shade=True
+            ).add_legend()
             plt.ylabel("density")
-            title = "Kernel distribution estimate of %s by %s" % (field1,field2)
+            title = "Kernel distribution estimate of %s by %s" % (field1, field2)
 
         elif field1 in cons and field2 in cons:
             ## joint plot
-            sns.jointplot(field1, field2, data=self.data, kind="reg",
-                          height=height)
+            sns.jointplot(field1, field2, data=self.data, kind="reg", height=height)
             title = ""
 
         else:
@@ -452,9 +432,7 @@ class Inspector:
 
 
 class MultiConverter(BaseEstimator, TransformerMixin):
-    def __init__(self, columns:list, cats:List[str],
-                 strategy:Dict[str,str]=None,
-                 drop:Dict[str,str]=None):
+    def __init__(self, columns: list, cats: List[str], strategy: Dict[str, str] = None, drop: Dict[str, str] = None):
         """
         This Transformer applies `sklearn.impute.SimpleImputer`
         and `sklearn.preprocessing.LabelBinarizer`. Moreover
@@ -502,7 +480,7 @@ class MultiConverter(BaseEstimator, TransformerMixin):
         self.lb = None
         self.classes_ = None
 
-    def fit(self, X:Union[np.ndarray,pd.DataFrame], y=None):
+    def fit(self, X: Union[np.ndarray, pd.DataFrame], y=None):
         """
         Fit Imputers and LabelEncoders by taking into account the given information
 
@@ -511,8 +489,8 @@ class MultiConverter(BaseEstimator, TransformerMixin):
         :return: self
         """
 
-        self.imputers = {} ## col -> SimpleImputer
-        self.lb = {} ## col -> LabelBinarizer
+        self.imputers = {}  ## col -> SimpleImputer
+        self.lb = {}  ## col -> LabelBinarizer
         self.classes_ = []
 
         for i in range(X.shape[1]):
@@ -521,7 +499,7 @@ class MultiConverter(BaseEstimator, TransformerMixin):
 
             if col in self.strategy.keys():
                 strategy = self.strategy[col]
-                if strategy not in ["mean","median","most_frequent"]:
+                if strategy not in ["mean", "median", "most_frequent"]:
                     fill_value = strategy
                     strategy = "constant"
                     imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
@@ -531,10 +509,10 @@ class MultiConverter(BaseEstimator, TransformerMixin):
             else:
                 imputer = SimpleImputer(strategy="mean")
 
-            if isinstance(X,pd.DataFrame):
+            if isinstance(X, pd.DataFrame):
                 df_vals = X[[col]].copy()
             else:
-                df_vals = pd.DataFrame({col:X[:,i]})
+                df_vals = pd.DataFrame({col: X[:, i]})
 
             df_vals.dropna(how="any", inplace=True)
             imputer.fit(df_vals)
@@ -559,7 +537,7 @@ class MultiConverter(BaseEstimator, TransformerMixin):
                     if col in self.drop.keys():
                         dropping_value = self.drop[col]
                         if dropping_value not in values:
-                            raise ValueError("%s is not found in the column %s" % (dropping_value,col))
+                            raise ValueError("%s is not found in the column %s" % (dropping_value, col))
 
                     else:
                         ## pick most frequent value
@@ -574,8 +552,7 @@ class MultiConverter(BaseEstimator, TransformerMixin):
 
         return self
 
-
-    def transform(self, X:Union[np.ndarray,pd.DataFrame]) -> np.ndarray:
+    def transform(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
         Convert the given numpy array or pandas DataFrame by applying trained
         imputers and encoders.
@@ -591,14 +568,14 @@ class MultiConverter(BaseEstimator, TransformerMixin):
             if isinstance(X, pd.DataFrame):
                 df_vals = X[[col]].copy()
             else:
-                df_vals = pd.DataFrame({col:X[:,i]})
+                df_vals = pd.DataFrame({col: X[:, i]})
 
             ## filling missing values
-            vals = self.imputers[col].transform(df_vals) # ndarray of shape (n,1)
+            vals = self.imputers[col].transform(df_vals)  # ndarray of shape (n,1)
 
             ## one-hot encoding
             if col in self.lb.keys():
-                vals = self.lb[col].transform(vals) ## ndarray
+                vals = self.lb[col].transform(vals)  ## ndarray
 
                 ## if the variable is not binary, then we drop the specified dummy variable
                 if self.lb[col].y_type_ != "binary":
@@ -607,9 +584,8 @@ class MultiConverter(BaseEstimator, TransformerMixin):
 
             data.append(vals)
 
-        return np.concatenate(data,axis=1)
+        return np.concatenate(data, axis=1)
 
-    def inverse_transform(self,X):
+    def inverse_transform(self, X):
         ## TODO: implementation inverse_transform
         raise NotImplemented("comming soon?")
-

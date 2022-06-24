@@ -19,7 +19,8 @@ from sklearn import datasets
 from sklearn.utils import Bunch
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
-def bunch2dataframe(bunch:Bunch, target:str=None) -> pd.DataFrame:
+
+def bunch2dataframe(bunch: Bunch, target: str = None) -> pd.DataFrame:
     """
     Create a DataFrame from a Bunch instance. The Bunch instance must
     have attributes data (numpy array), feature_names (iterable) and
@@ -36,7 +37,7 @@ def bunch2dataframe(bunch:Bunch, target:str=None) -> pd.DataFrame:
     return df
 
 
-def load_iris(target:str="species") -> pd.DataFrame:
+def load_iris(target: str = "species") -> pd.DataFrame:
     """
     Construct a DataFrame from sklearn.datasets.load_iris
 
@@ -46,12 +47,12 @@ def load_iris(target:str="species") -> pd.DataFrame:
 
     iris = datasets.load_iris()
     df = bunch2dataframe(iris, target)
-    df.columns = [c[:-5].replace(" ","_") for c in iris.feature_names] + [target]
+    df.columns = [c[:-5].replace(" ", "_") for c in iris.feature_names] + [target]
     df[target] = df[target].apply(lambda i: iris.target_names[i])
     return df
 
 
-def load_breast_cancer(target:str="label") -> pd.DataFrame:
+def load_breast_cancer(target: str = "label") -> pd.DataFrame:
     """
     Construct a Dataframe from sklearn.datasets.load_breas_cancer
 
@@ -60,11 +61,12 @@ def load_breast_cancer(target:str="label") -> pd.DataFrame:
     """
     breast_cancer = datasets.load_breast_cancer()
     df = bunch2dataframe(breast_cancer, target=target)
-    df[target] = [breast_cancer.target_names[y].replace(" ","_") for y in df[target]]
+    df[target] = [breast_cancer.target_names[y].replace(" ", "_") for y in df[target]]
     return df
 
+
 ## TODO: replace this with another data set for regression
-def load_boston(target:str="PRICE"):
+def load_boston(target: str = "PRICE"):
     """
     Construct a DataFrame from sklearn.datasets.load_boston
 
@@ -75,7 +77,7 @@ def load_boston(target:str="PRICE"):
     return bunch2dataframe(boston, target)
 
 
-def load_diabetes(target:str="progression"):
+def load_diabetes(target: str = "progression"):
     """
     Construct a DataFrame from sklearn.datasets.load_diabetes
 
@@ -87,7 +89,7 @@ def load_diabetes(target:str="progression"):
     return bunch2dataframe(diabetes, target)
 
 
-def fetch_adult_dataset(csv_path:Path):
+def fetch_adult_dataset(csv_path: Path):
     """
     fetch the famous adult data set from UCI Machine Learning Repository
     and store it to the given path. If the data set file already exists,
@@ -99,10 +101,25 @@ def fetch_adult_dataset(csv_path:Path):
     """
 
     import hashlib
+
     data_url = "http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
-    names = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status",
-             "occupation", "relationship", "race", "sex", "capital-gain", "capital-loss",
-             "hours-per-week", "native-country", "label"]
+    names = [
+        "age",
+        "workclass",
+        "fnlwgt",
+        "education",
+        "education-num",
+        "marital-status",
+        "occupation",
+        "relationship",
+        "race",
+        "sex",
+        "capital-gain",
+        "capital-loss",
+        "hours-per-week",
+        "native-country",
+        "label",
+    ]
     checksum = "ee2d7503652f28a713aa6a054f5d9bb610a160afb8b817e6347d155c80af9795"
 
     if not csv_path.exists():
@@ -117,7 +134,7 @@ def fetch_adult_dataset(csv_path:Path):
         raise Exception("You seem to have downloaded a wrong file")
 
 
-def grep_data(data:pd.DataFrame, column:str, expr:str) -> pd.DataFrame:
+def grep_data(data: pd.DataFrame, column: str, expr: str) -> pd.DataFrame:
     """
     Pick the rows with a specified expression and return them as
     the subset of the given DataFrame.
@@ -127,14 +144,24 @@ def grep_data(data:pd.DataFrame, column:str, expr:str) -> pd.DataFrame:
     :param expr: expression to find (passed to re.search)
     :return: copy of the matched rows
     """
-    s_matched = data[column].apply(lambda s: True if re.search(expr,str(s)) else False)
+    s_matched = data[column].apply(lambda s: True if re.search(expr, str(s)) else False)
     return data[s_matched].copy()
 
 
-def facet_grid_scatter_plot(data:pd.DataFrame, row:str, col:str,
-                            x:str, y:str, c:str=None, hue:str=None,
-                            cmap:str="bwr", alpha=0.5, aspect:float=2,
-                            margin_titles:bool=True, **kwargs):
+def facet_grid_scatter_plot(
+    data: pd.DataFrame,
+    row: str,
+    col: str,
+    x: str,
+    y: str,
+    c: str = None,
+    hue: str = None,
+    cmap: str = "bwr",
+    alpha=0.5,
+    aspect: float = 2,
+    margin_titles: bool = True,
+    **kwargs,
+):
     """
     create grid by using two categorical variables row and col and draw scatter plots by
     using variables x and y with color c (continuous) or hue (categorical). In R this
@@ -174,29 +201,34 @@ def facet_grid_scatter_plot(data:pd.DataFrame, row:str, col:str,
 
     if c:
         ## c is given => continuous variable
-        fg = sns.FacetGrid(data=data, row=row, col=col,
-                           aspect=aspect, margin_titles=margin_titles, **kwargs)
+        fg = sns.FacetGrid(data=data, row=row, col=col, aspect=aspect, margin_titles=margin_titles, **kwargs)
         fg = fg.map(plt_scatter, x, y, c, alpha=alpha, cmap=cmap)
 
         ## put a common color bar on the right
         vmin, vmax = data[c].min(), data[c].max()
 
         fg.fig.subplots_adjust(right=0.85)
-        cax = fg.fig.add_axes([0.90, 0.25, 0.02, 0.6]) ## TODO: is it universal?
+        cax = fg.fig.add_axes([0.90, 0.25, 0.02, 0.6])  ## TODO: is it universal?
         points = plt.scatter([], [], c=[], vmin=vmin, vmax=vmax, cmap=cmap)
         color_bar = fg.fig.colorbar(points, cax=cax)
         color_bar.set_label(c, rotation=270, labelpad=25)
 
     else:
         ## hue is given => discrete variable
-        fg = sns.FacetGrid(data=data, row=row, col=col, hue=hue,
-                           aspect=aspect, margin_titles=margin_titles, **kwargs)
+        fg = sns.FacetGrid(data=data, row=row, col=col, hue=hue, aspect=aspect, margin_titles=margin_titles, **kwargs)
         fg.map(plt.scatter, x, y, alpha=alpha).add_legend()
 
 
-def bins_by_tree(data:pd.DataFrame, field:str, target:str,
-                 target_is_continuous:bool, n_bins:int=5,
-                 n_points:int=200, precision:int=2, **kwargs) -> pd.Series:
+def bins_by_tree(
+    data: pd.DataFrame,
+    field: str,
+    target: str,
+    target_is_continuous: bool,
+    n_bins: int = 5,
+    n_points: int = 200,
+    precision: int = 2,
+    **kwargs,
+) -> pd.Series:
     """
     bin the given field by looking at the target variable. More precisely
     we bin the field, so that the cost function (Gini index/RMSE) is optimized.
@@ -225,7 +257,7 @@ def bins_by_tree(data:pd.DataFrame, field:str, target:str,
 
     ## grid space whose points can be separators
     grid = np.linspace(data[field].min(), data[field].max(), num=n_points)
-    grid = pd.DataFrame({field:grid})
+    grid = pd.DataFrame({field: grid})
 
     if target_is_continuous:
         fibers = pd.DataFrame(tree.predict(grid))
@@ -234,9 +266,9 @@ def bins_by_tree(data:pd.DataFrame, field:str, target:str,
 
     ## possible values of predictions
     leaves = fibers.drop_duplicates().copy()
-    leaves["bin"] = np.arange(0,leaves.shape[0]) ## put bin numbers
+    leaves["bin"] = np.arange(0, leaves.shape[0])  ## put bin numbers
 
-    grid = pd.merge(pd.concat([grid,fibers], axis=1), leaves, how="left", on=list(fibers.columns))
+    grid = pd.merge(pd.concat([grid, fibers], axis=1), leaves, how="left", on=list(fibers.columns))
 
     ## find "bins" (boundaries of bins)
     bins = list(grid.groupby("bin")[field].first())
@@ -246,9 +278,19 @@ def bins_by_tree(data:pd.DataFrame, field:str, target:str,
     return pd.cut(data[field], bins, precision=precision)
 
 
-def bins_heatmap(data:pd.DataFrame, cat1:str, cat2:str, x:str, y:str, target:str,
-                 n_bins:int=5, cmap:str="YlGnBu", center:float=None,
-                 magnification:float=None, fontsize:int=14):
+def bins_heatmap(
+    data: pd.DataFrame,
+    cat1: str,
+    cat2: str,
+    x: str,
+    y: str,
+    target: str,
+    n_bins: int = 5,
+    cmap: str = "YlGnBu",
+    center: float = None,
+    magnification: float = None,
+    fontsize: int = 14,
+):
     """
     create a grid with cat1 (and cat2) and draw heat maps (x,y,AVG(target)). For heat maps
     we bin the variables x and y by applying bins_by_tree.
@@ -278,14 +320,14 @@ def bins_heatmap(data:pd.DataFrame, cat1:str, cat2:str, x:str, y:str, target:str
         cats2 = data[cat2].unique()
 
     vals2loc = OrderedDict()
-    for val1, val2 in product(cats1,cats2):
+    for val1, val2 in product(cats1, cats2):
         if val2 is None:
             loc = data[cat1] == val1
         else:
             loc = np.logical_and(data[cat1] == val1, data[cat2] == val2)
 
         if loc.any():
-            vals2loc[(val1,val2)] = loc
+            vals2loc[(val1, val2)] = loc
 
     fig, axes = plt.subplots(nrows=len(vals2loc.keys()), ncols=1)
 
@@ -293,24 +335,22 @@ def bins_heatmap(data:pd.DataFrame, cat1:str, cat2:str, x:str, y:str, target:str
     h = fig.get_figheight()
     if magnification is None:
         magnification = max(len(cats1), len(cats2))
-    fig.set_figheight(magnification*h)
+    fig.set_figheight(magnification * h)
 
     ## boundary of the color gauge
     vmin, vmax = data[target].min(), data[target].max()
 
     for pair, subax in zip(vals2loc.keys(), axes.flat):
         val1, val2 = pair
-        subset = data.loc[vals2loc[(val1,val2)],:].copy()
+        subset = data.loc[vals2loc[(val1, val2)], :].copy()
 
-        for field in [x,y]:
-            subset[field] = bins_by_tree(subset, field=field, target=target,
-                                         target_is_continuous=True, n_bins=n_bins)
+        for field in [x, y]:
+            subset[field] = bins_by_tree(subset, field=field, target=target, target_is_continuous=True, n_bins=n_bins)
 
-        df_heatmap = subset.groupby([x,y])[target].mean().reset_index()
+        df_heatmap = subset.groupby([x, y])[target].mean().reset_index()
         df_heatmap = df_heatmap.pivot(index=y, columns=x, values=target)
         df_heatmap.sort_index(ascending=False, inplace=True)
-        sns.heatmap(df_heatmap, vmin=vmin, vmax=vmax, cmap=cmap,
-                    center=center, annot=True, cbar=False, ax=subax)
+        sns.heatmap(df_heatmap, vmin=vmin, vmax=vmax, cmap=cmap, center=center, annot=True, cbar=False, ax=subax)
 
         if val2 is None:
             subax.set_title("%s = %s" % (cat1, val1))
