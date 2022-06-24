@@ -17,7 +17,6 @@ from io import StringIO
 from sklearn.tree import export_graphviz
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from IPython.display import Image
-import pydot
 
 ## for ROCCurve class
 from sklearn.metrics import roc_curve, roc_auc_score
@@ -30,7 +29,7 @@ import matplotlib.pyplot as plt
 grid_params = {
     "ElasticNet": {
         "alpha": [0.01, 0.1, 1.0],
-        "l1_ratio": [0.1, 0.4, 0.7, 1]
+        "l1_ratio": [0.1, 0.3, 0.7, 0.9]
     },
     "LogisticRegression": {
         "C": [0.1, 1.0, 10],
@@ -203,15 +202,7 @@ def show_tree(model:Union[DecisionTreeRegressor, DecisionTreeClassifier, GridSea
     :param columns: names of columns
     :return: Image instance (for Jupyter)
     """
-    if isinstance(model, GridSearchCV):
-        model = pick_the_last_estimator(model)
-
-    dot_data = StringIO()
-    export_graphviz(model, out_file=dot_data, feature_names=columns,
-                    filled=True, rounded=True, special_characters=True)
-    graph = pydot.graph_from_dot_data(dot_data.getvalue())[0]
-    return Image(graph.create_png())
-
+    raise NotImplementedError("Implement without pydot")
 
 def show_feature_importance(estimator:BaseEstimator,
                             columns:Union[List[str],pd.Index]) -> pd.Series:
@@ -363,7 +354,7 @@ class ROCCurve:
         """
         y_pred = self.predict_thru_threshold(threshold)
 
-        s = pd.Series(name="performance", dtype=np.float)
+        s = pd.Series(name="performance", dtype=float)
         s["threshold"] = threshold
         s["recall"] = recall_score(self.y_true, y_pred)
         s["precision"] = precision_score(self.y_true, y_pred)
