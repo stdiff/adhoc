@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+    install:
+        runtime-versions:
+            python: 3.9
+        commands:
+            - curl -sSL https://install.python-poetry.org | python3 - --version 1.1.13
+            - export PATH=/root/.local/bin:$PATH
+            - poetry env use system
+            - poetry install --no-dev
+            - export VERSION=$(poetry version -s).$CODEBUILD_BUILD_NUMBER
+            - poetry version $VERSION # this sets the version of the wheel file
+    pre_build:
+        commands:
+            - poetry run black --check */*.py
+            - poetry run python -m unittest test/*.py
+    build:
+        commands:
+            - poetry build # We should add an integration test (execution of jupyter notebooks)
+    post_build:
+        commands:
+            - export POETRY_HTTP_BASIC_STDIFF_USERNAME=aws
+            - export POETRY_HTTP_BASIC_STDIFF_PASSWORD=$(aws codeartifact get-authorization-token --domain-owner $AWS_ACCOUNT_ID --domain stdiff --query 'authorizationToken' --output text)
+            - poetry config repositories.stdiff $(aws codeartifact get-repository-endpoint --domain-owner $AWS_ACCOUNT_ID --domain stdiff --repository stdiff --format pypi --query repositoryEndpoint --output text)
+            - poetry publish -r stdiff
+            - mv dist $VERSION
+artifacts:
+    files:
+        - $VERSION/ad_hoc-*-py3-none-any.whl
