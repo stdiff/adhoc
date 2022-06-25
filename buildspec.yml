@@ -13,7 +13,7 @@ phases:
             - poetry version $VERSION # this sets the version of the wheel file
     pre_build:
         commands:
-            - poetry run black --check */*.py
+            - poetry run black --check ad_hoc/*.py test/*.py
             - poetry run python -m unittest test/*.py
     build:
         commands:
